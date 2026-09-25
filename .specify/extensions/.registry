@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "agent-context": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:9a1dc02d2d0139bb03860392ecacef79183be2c442feda2f9ccaa4e5907b1e47",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "agy": [
+          "speckit.agent-context.update"
+        ],
+        "codex": [
+          "speckit.agent-context.update"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-25T21:18:58.519292+00:00"
+    },
+    "review-profiles": {
+      "version": "0.3.0",
+      "source": "local",
+      "manifest_hash": "sha256:261a974c63bdcebf6f5591964fdae62821c20088248fa25016ccca7fba83addf",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "agy": [
+          "speckit.review-profiles.review",
+          "speckit.review-profiles.gate"
+        ],
+        "codex": [
+          "speckit.review-profiles.review",
+          "speckit.review-profiles.gate"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-25T21:25:47.728971+00:00"
+    }
+  }
+}
