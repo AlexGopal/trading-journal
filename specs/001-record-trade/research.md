@@ -524,7 +524,7 @@ Candidate approaches include:
 1. PostgreSQL through Testcontainers for database-sensitive integration tests;
 2. H2 for limited fast tests where database-specific behavior is irrelevant.
 
-Research preference is to use real PostgreSQL-based integration testing where correctness depends on database behavior, rather than assuming H2 perfectly represents PostgreSQL.
+**Approved decision:** PostgreSQL-sensitive persistence and Flyway integration tests use a real PostgreSQL container through Testcontainers. H2 does not substitute for tests whose correctness depends on PostgreSQL behavior. The exact Testcontainers dependency version is selected and pinned during implementation setup.
 
 ## Consequences
 
@@ -693,6 +693,8 @@ No cloud provider should be selected merely to fill out the architecture.
 - Flyway for versioned PostgreSQL schema migrations
 - `BigDecimal` derived-performance calculation without premature precision reduction
 - derived output scales: API dollar P&L 2 decimals, API percentage return 4 decimals, UI dollar P&L currency 2 decimals, and UI percentage return 2 decimals
+- derived rounding policy: percentage-return division uses intermediate scale 10 with `HALF_UP`; API output scale conversion also uses `HALF_UP`
+- Testcontainers with PostgreSQL for PostgreSQL-sensitive persistence and Flyway integration tests
 - JUnit + Spring Boot Test
 - Vitest + React Testing Library
 - no authentication for Feature 001

@@ -370,9 +370,11 @@ After successful trade processing, the application shall make the calculated:
 
 available to the frontend for presentation to the user.
 
-Derived output shall preserve `BigDecimal` calculation precision until the approved output boundary. API dollar P&L shall use 2 decimal places and API percentage return shall use 4 decimal places. The UI shall display dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places.
+Derived output shall preserve `BigDecimal` calculation precision until the approved output boundary. Percentage-return division shall use intermediate scale 10 with `HALF_UP` rounding. API dollar P&L shall use 2 decimal places with `HALF_UP`, and API percentage return shall use 4 decimal places with `HALF_UP`. The UI shall display both values with exactly 2 fractional decimal places.
 
 These derived-output rules do not change approved input or persistence precision for prices or share quantities. The complete API response shape remains owned by Specification and OpenAPI.
+
+Currency symbol, locale, and thousands-grouping style are non-contractual presentation choices unless already established by the repository.
 
 **Upstream basis:**
 - Intended System
@@ -747,6 +749,8 @@ Material UI shall be the primary frontend component library.
 
 A competing primary component framework shall not be introduced.
 
+Feature 001 shall follow `specs/shared/frontend/spec.md` for shared layout, spacing, typography, Material UI composition, forms, actions, responsive behavior, accessibility, and loading/success/error presentation. Feature-specific behavior remains governed by Feature 001 artifacts.
+
 ---
 
 ## FE-004 — User-Facing Validation Feedback
@@ -895,9 +899,7 @@ The complete Spring context should not be loaded for every test when a narrower 
 
 ## TEST-006 — PostgreSQL-Sensitive Integration Testing
 
-Where correctness materially depends on PostgreSQL behavior, integration testing shall use PostgreSQL-compatible execution rather than assuming H2 is equivalent. Integration tests shall verify that Flyway applies the initial versioned Trade-table migration successfully.
-
-The exact mechanism remains unresolved.
+PostgreSQL-sensitive persistence and Flyway integration tests shall run against a real PostgreSQL container through Testcontainers rather than substituting H2 where PostgreSQL behavior affects correctness. Tests shall verify that Flyway applies the initial versioned Trade-table migration successfully. The exact Testcontainers dependency version shall be selected and pinned during implementation setup.
 
 ---
 
@@ -1009,7 +1011,9 @@ No cloud provider or production hosting platform shall be selected merely to com
 
 Backend application code shall use deliberate application logging rather than ad hoc console output.
 
-Logs shall provide useful failure context without exposing secrets.
+Logs shall record successful trade creation, application-level validation rejection where appropriate, and unexpected technical/persistence failure.
+
+Safe context may include the generated trade ID after persistence, normalized ticker where useful, and a high-level outcome or failure category. Logs shall not contain credentials, secrets, tokens, database passwords, full request payloads, or unnecessary entry/exit prices or share quantities. Internal exception details may be logged when appropriate for diagnosis, but stack traces and internal runtime details shall not be exposed in client responses.
 
 ---
 
@@ -1180,7 +1184,7 @@ The current approved assumptions are:
 Derived output precision can drift if calculation, API serialization, and UI formatting apply inconsistent scales or reduce precision prematurely.
 
 **Handling:**  
-Keep authoritative calculations in `BigDecimal`, preserve intermediate precision, serialize API dollar P&L to 2 decimal places and percentage return to 4 decimal places, and display them in the UI at 2 decimal places as approved.
+Keep authoritative calculations in `BigDecimal`, use intermediate division scale 10 with `HALF_UP`, serialize API dollar P&L to 2 decimal places with `HALF_UP` and percentage return to 4 decimal places with `HALF_UP`, and display both in the UI with exactly 2 fractional decimal places.
 
 ---
 
@@ -1207,7 +1211,7 @@ Contract details must remain downstream decisions and later be reconciled throug
 Using H2 for all persistence tests could hide PostgreSQL-specific behavior.
 
 **Handling:**  
-Use PostgreSQL-compatible testing when behavior depends materially on PostgreSQL.
+Use Testcontainers with a real PostgreSQL container when behavior depends materially on PostgreSQL; do not substitute H2 for those tests.
 
 ---
 
@@ -1219,7 +1223,6 @@ The following remain unresolved and must not be silently invented:
 - ticker character restrictions;
 - exact PostgreSQL version;
 - exact Spring Boot/library patch versions;
-- database integration-test mechanism;
 - E2E testing framework;
 - production deployment target;
 - full application containerization;
@@ -1301,6 +1304,7 @@ This artifact is derived from:
 - `.specify/memory/constitution.md`
 - `specs/001-record-trade/supporting/architecture.md`
 - `specs/001-record-trade/data-model.md`
+- `specs/shared/frontend/spec.md`
 
 ## Downstream Consumers
 
@@ -1313,7 +1317,7 @@ This artifact must be consumed by:
 - `specs/001-record-trade/supporting/test-spec.md`
 - `specs/001-record-trade/supporting/traceability-matrix.md`
 - `specs/001-record-trade/checklists/requirements.md`
-- `specs/001-record-trade/supporting/copilot-build-prompt.md`
+- `specs/001-record-trade/supporting/implementation-build-prompt.md`
 - implementation and review activities
 
 ## Authority Boundary
@@ -1326,7 +1330,8 @@ It is subject to:
 - approved Business Rules;
 - Intended System scope;
 - approved Architecture;
-- approved Data Model.
+- approved Data Model;
+- the shared frontend specification for cross-feature presentation and interaction conventions.
 
 It is not authoritative for:
 

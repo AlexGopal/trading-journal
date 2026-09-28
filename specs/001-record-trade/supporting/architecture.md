@@ -258,6 +258,8 @@ Repository interfaces must not define future analytical queries before correspon
 
 The frontend is a standalone React + TypeScript application built with Vite and using Material UI as its primary component library.
 
+Reusable frontend presentation and interaction conventions—including layout, spacing, typography, Material UI composition, forms, actions, state presentation, responsive behavior, accessibility, and visual consistency—must follow `specs/shared/frontend/spec.md`. Feature 001 artifacts remain authoritative for feature-specific fields, validation, calculations, API behavior, and acceptance criteria.
+
 ## 6.1 UI Responsibilities
 
 The frontend is responsible for:
@@ -504,8 +506,10 @@ Feature 001 requires simple, deliberate backend logging.
 Backend logging should:
 
 - use the application logging framework rather than ad hoc console output;
-- provide useful context for failures and important application events;
-- avoid exposing credentials or sensitive data.
+- record successful trade creation, application-level validation rejection where appropriate, and unexpected technical/persistence failure;
+- include safe context such as generated trade ID after persistence, normalized ticker where useful, and a high-level outcome or failure category;
+- avoid credentials, secrets, tokens, database passwords, full request payloads, and unnecessary entry/exit prices or share quantities;
+- allow internal exception details when appropriate for diagnosis while keeping stack traces and internal runtime details out of client responses.
 
 Feature 001 does not justify introducing:
 
@@ -563,9 +567,7 @@ Backend testing should allow:
 
 Tests should use the narrowest appropriate scope.
 
-Database-sensitive behavior should use PostgreSQL-compatible integration testing when PostgreSQL behavior affects correctness.
-
-The exact integration-test mechanism remains open.
+PostgreSQL-sensitive persistence and Flyway integration tests use a real PostgreSQL container through Testcontainers. H2 must not substitute where correctness depends on PostgreSQL behavior. The exact Testcontainers dependency version is selected and pinned during implementation setup.
 
 ## 15.2 Frontend
 
@@ -742,7 +744,6 @@ The following remain intentionally unresolved:
 - exact repository layout where not already established;
 - exact PostgreSQL version;
 - exact Spring Boot and library patch versions;
-- database integration-test mechanism;
 - E2E testing framework;
 - production deployment target;
 - full application containerization;
@@ -795,6 +796,7 @@ This Architecture is derived from:
 - `specs/001-record-trade/supporting/business-rules.md`
 - `specs/001-record-trade/research.md`
 - `.specify/memory/constitution.md`
+- `specs/shared/frontend/spec.md`
 
 A Dependency Map was intentionally not generated because Feature 001 currently has no approved material external integration dependency.
 
@@ -807,7 +809,7 @@ This Architecture must be consumed by:
 - `specs/001-record-trade/spec.md`
 - `specs/001-record-trade/plan.md`
 - `specs/001-record-trade/tasks.md`
-- `specs/001-record-trade/supporting/copilot-build-prompt.md`
+- `specs/001-record-trade/supporting/implementation-build-prompt.md`
 - applicable test, traceability, review, and implementation artifacts
 
 ## Authority Boundary
@@ -822,6 +824,8 @@ This document is authoritative for:
 - approved architectural constraints for Feature 001 and the current application baseline.
 
 It is subject to the project Constitution.
+
+Frontend presentation and interaction architecture is also subject to `specs/shared/frontend/spec.md`, which cannot override Feature 001 behavior or contracts.
 
 It is **not** authoritative for:
 

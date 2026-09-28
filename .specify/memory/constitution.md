@@ -595,7 +595,7 @@ This Constitution governs:
 - Traceability Matrix
 - review checklists
 - Quickstart
-- Copilot/AI Build Prompt
+- Implementation Build Prompt
 - implementation and review activities
 
 It also governs future Trading Journal features unless intentionally amended.

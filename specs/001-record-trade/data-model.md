@@ -503,7 +503,7 @@ Use `BigDecimal` for:
 
 ## Internal Calculation
 
-Calculations must preserve sufficient precision during intermediate operations rather than converting values to binary floating-point types or reducing scale prematurely.
+Calculations must preserve sufficient precision during intermediate operations rather than converting values to binary floating-point types or reducing scale prematurely. Percentage-return division uses intermediate scale 10 with `HALF_UP` rounding before multiplying by 100 and applying the final output scale.
 
 ## Persisted Input Scale
 
@@ -521,10 +521,12 @@ Derived performance output uses these approved scales:
 
 | Value | API serialization | UI presentation |
 |---|---|---|
-| Dollar P&L | 2 decimal places | Currency with 2 decimal places |
-| Percentage return | 4 decimal places | Percentage with 2 decimal places |
+| Dollar P&L | 2 decimal places using `HALF_UP` | Exactly 2 fractional decimal places |
+| Percentage return | 4 decimal places using `HALF_UP` | Exactly 2 fractional decimal places |
 
 These output rules apply only to derived performance values. They do not change the approved input or persistence scales for prices and share quantities.
+
+Currency symbol, locale, and thousands-grouping style are presentation choices rather than Feature 001 contract requirements unless the existing repository establishes them.
 
 The implementation must not silently convert derived calculations to floating-point values.
 

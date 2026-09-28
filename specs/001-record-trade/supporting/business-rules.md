@@ -473,7 +473,6 @@ These items are future considerations only and must not be treated as current re
 
 The following details are intentionally unresolved and should be handled by appropriate downstream artifacts or future feature decisions:
 
-- user-visible/API rounding rules for calculated P&L and percentage return;
 - maximum permitted ticker length and any detailed ticker-character rules;
 - whether future features will support open positions;
 - how future features will represent trades with multiple entries or exits;

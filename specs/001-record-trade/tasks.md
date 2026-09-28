@@ -53,8 +53,8 @@ The tasks must not redefine approved behavior or introduce future capabilities.
 - [ ] T015 Implement date validation: entry and exit dates required, `exitDate >= entryDate`, and same-day trades accepted.
 - [ ] T016 Implement price validation: entry/exit prices greater than zero and no more than 4 fractional decimal places.
 - [ ] T017 Implement share validation: quantity greater than zero, fractional shares allowed, and no more than 6 fractional decimal places.
-- [ ] T018 Implement LONG dollar P&L and percentage-return calculations using `BigDecimal` without premature precision reduction.
-- [ ] T019 Implement SHORT dollar P&L and percentage-return calculations using `BigDecimal` without premature precision reduction.
+- [ ] T018 Implement LONG dollar P&L and percentage-return calculations using `BigDecimal` without premature precision reduction; use intermediate division scale 10 with `HALF_UP` for percentage return.
+- [ ] T019 Implement SHORT dollar P&L and percentage-return calculations using `BigDecimal` without premature precision reduction; use intermediate division scale 10 with `HALF_UP` for percentage return.
 - [ ] T020 Preserve positive/profit, negative/loss, and zero/break-even semantics while keeping calculations independently testable.
 - [ ] T021 Ensure excess input scale is rejected rather than silently rounded.
 
@@ -67,14 +67,14 @@ The tasks must not redefine approved behavior or introduce future capabilities.
 - [ ] T024 Ensure repeated identical valid submissions create separate trades with distinct generated IDs.
 - [ ] T025 Ensure persistence failure does not produce a successful application outcome.
 - [ ] T026 Keep business rules out of controllers and persistence mechanics out of frontend code.
-- [ ] T066 Implement structured, intentional application logging for backend trade-creation outcomes and failure paths with useful diagnostic context, excluding secrets, credentials, and unnecessary sensitive trade values.
+- [ ] T066 Implement application-framework logging for successful trade creation, application-level validation rejection where appropriate, and unexpected technical/persistence failure; allow safe context such as generated trade ID, normalized ticker, and high-level outcome/failure category while excluding credentials, secrets, tokens, database passwords, full request payloads, and unnecessary prices or share quantities.
 
 ---
 
 # Phase 5 — API and Error Handling
 
 - [ ] T027 [P] Create the request DTO for `ticker`, `tradeType`, `entryDate`, `entryPrice`, `exitDate`, `exitPrice`, and `numberOfShares`.
-- [ ] T028 [P] Create the success response DTO containing persisted trade facts, generated ID, `dollarPnl` serialized to 2 decimal places, and `percentageReturn` serialized to 4 decimal places.
+- [ ] T028 [P] Create the success response DTO containing persisted trade facts, generated ID, `dollarPnl` serialized to 2 decimal places using `HALF_UP`, and `percentageReturn` serialized to 4 decimal places using `HALF_UP`.
 - [ ] T029 [P] Create validation and technical error DTOs using the approved `message` / `fieldErrors` structures.
 - [ ] T030 Implement `POST /api/v1/trades`.
 - [ ] T031 Return `201 Created` with normalized ticker, generated ID, persisted trade facts, and derived performance for valid submissions.
@@ -87,16 +87,16 @@ The tasks must not redefine approved behavior or introduce future capabilities.
 
 # Phase 6 — Backend Tests
 
-- [ ] T036 [P] Add unit tests covering LONG/SHORT profit, loss, break-even, percentage-return calculations, and preservation of `BigDecimal` calculation precision before output formatting.
+- [ ] T036 [P] Add unit tests covering LONG/SHORT profit, loss, break-even, percentage-return calculations at intermediate division scale 10 with `HALF_UP`, and preservation of `BigDecimal` precision before output formatting.
 - [ ] T037 [P] Add ticker normalization tests covering lowercase, surrounding whitespace, missing ticker, and whitespace-only ticker.
 - [ ] T038 [P] Add trade-type and date-validation tests, including unsupported/missing type, missing dates, invalid order, and same-day acceptance.
 - [ ] T039 [P] Add price/share validation tests covering zero, negative, fractional shares, and approved decimal-scale limits.
 - [ ] T040 Add service tests for successful persistence, returned derived performance, duplicate submissions, and persistence failure.
-- [ ] T041 Add controller/API tests for valid LONG/SHORT creation, `201`, approved response fields, normalized ticker, 2-decimal `dollarPnl`, and 4-decimal `percentageReturn` serialization.
+- [ ] T041 Add controller/API tests for valid LONG/SHORT creation, `201`, approved response fields, normalized ticker, 2-decimal `dollarPnl` using `HALF_UP`, and 4-decimal `percentageReturn` using `HALF_UP`.
 - [ ] T042 Add controller/API tests for `400` validation behavior and approved validation-error structure.
 - [ ] T043 Add controller/API tests for `500` technical failure behavior and safe client-facing error output.
-- [ ] T044 Add PostgreSQL-compatible persistence/integration tests for Flyway migration application, generated IDs, numeric precision/scale, duplicate records, and non-persisted derived performance.
-- [ ] T067 Verify trade-creation and failure-path logging is emitted through the application logging framework, contains useful diagnostic context, and does not expose secrets, credentials, or unnecessary sensitive trade values.
+- [ ] T044 Add Testcontainers-based tests against a real PostgreSQL container for Flyway migration application, generated IDs, numeric precision/scale, duplicate records, and non-persisted derived performance; do not substitute H2 for PostgreSQL-sensitive behavior, and pin the Testcontainers dependency version during setup.
+- [ ] T067 Verify required logging events are emitted with approved safe context; prohibited credentials, secrets, tokens, database passwords, full payloads, and unnecessary prices/share quantities are absent; internal exception details may remain backend-only and client responses expose no stack traces or internal runtime details.
 
 ---
 
@@ -104,22 +104,22 @@ The tasks must not redefine approved behavior or introduce future capabilities.
 
 - [ ] T045 [P] Define typed TypeScript request, success-response, and error models matching the approved API contract.
 - [ ] T046 Implement or extend the frontend API client for `POST /api/v1/trades` and keep HTTP calls isolated from unrelated components.
-- [ ] T047 Build the Material UI trade-entry form with ticker, trade type, entry/exit dates, entry/exit prices, and number of shares.
+- [ ] T047 Build the Material UI trade-entry form with ticker, trade type, entry/exit dates, entry/exit prices, and number of shares, following `specs/shared/frontend/spec.md` for layout, spacing, responsive composition, labels, actions, accessibility, and visual consistency.
 - [ ] T048 Implement user-facing validation for required fields, ticker rules, date order, positive numeric values, and approved decimal scales.
 - [ ] T049 Submit valid trade data through the API client while keeping backend validation authoritative.
-- [ ] T050 Present successful recorded-trade results using backend-authoritative values, including normalized ticker, generated ID, dollar P&L formatted as currency with 2 decimal places, and percentage return displayed with 2 decimal places.
-- [ ] T051 Present backend validation, technical, and transport failures without showing false success or sensitive backend details.
+- [ ] T050 Present successful recorded-trade results using backend-authoritative values, including normalized ticker, generated ID, and dollar P&L and percentage return with exactly 2 fractional decimal places; do not require a currency symbol, locale, or grouping style unless established by the repository.
+- [ ] T051 Present loading, backend validation, technical, transport, and success states consistently with `specs/shared/frontend/spec.md`, without false success, unnecessary layout movement, or sensitive backend details.
 - [ ] T052 Do not introduce dashboard, chart, trade-history, strategy, indicator, authentication, or other future Feature 001 UI.
 
 ---
 
 # Phase 8 — Frontend Tests
 
-- [ ] T053 [P] Test the trade-entry form renders all approved fields and supports LONG/SHORT selection.
+- [ ] T053 [P] Test the trade-entry form renders all approved fields, supports LONG/SHORT selection, remains usable at representative desktop and narrower widths, and preserves semantic labels, keyboard access, and visible focus behavior required by `specs/shared/frontend/spec.md`.
 - [ ] T054 [P] Test user-facing validation for required fields, ticker whitespace, date order, numeric limits, and decimal-scale limits.
-- [ ] T055 Test successful submission uses the approved request shape and renders dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places from backend-authoritative values.
-- [ ] T056 Test backend validation and technical/transport failures produce appropriate user-visible error states.
-- [ ] T057 Keep frontend tests focused on user-observable behavior rather than internal component implementation details.
+- [ ] T055 Test successful submission uses the approved request shape and renders dollar P&L and percentage return with exactly 2 fractional decimal places from backend-authoritative values without asserting a currency symbol, locale, or grouping style unless established by the repository.
+- [ ] T056 Test loading, success, backend validation, and technical/transport failures produce stable, understandable user-visible states consistent with `specs/shared/frontend/spec.md`.
+- [ ] T057 Keep frontend tests focused on user-observable behavior and shared accessibility/responsive/state-presentation outcomes rather than pixel-perfect styling or internal component implementation details.
 
 ---
 
@@ -131,8 +131,8 @@ The tasks must not redefine approved behavior or introduce future capabilities.
 - [ ] T061 Verify identical valid submissions create two persisted trades with distinct IDs.
 - [ ] T062 Verify persistence failure does not produce a successful API or frontend state.
 - [ ] T063 Verify no external brokerage, market-data, authentication, AI, or other unapproved capability is required.
-- [ ] T064 Review implementation against Constitution, Architecture, Data Model, Supporting Requirements, Specification, and Plan; reconcile any drift before approval.
-- [ ] T065 Capture verified startup/configuration and implementation-review evidence needed for later Quickstart and review-artifact generation.
+- [ ] T064 Review implementation against Constitution, `specs/shared/frontend/spec.md`, Architecture, Data Model, Supporting Requirements, Specification, and Plan; reconcile any drift before approval while preserving Feature 001 behavior authority.
+- [ ] T065 Validate and maintain the existing Quickstart and review evidence against verified startup, configuration, test, and implementation behavior; finalize corrections without regenerating the approved downstream artifact package.
 
 ---
 
@@ -193,10 +193,8 @@ Feature 001 must not add:
 
 The following remain intentionally open:
 
-- exact human-readable validation/error wording;
 - exact PostgreSQL version until implementation setup;
 - exact Spring Boot/library patch versions until implementation setup;
-- exact PostgreSQL integration-test mechanism;
 - E2E framework;
 - production deployment target;
 - full application containerization;
@@ -224,6 +222,7 @@ This Tasks artifact is derived from:
 - `specs/001-record-trade/supporting/requirements.md`
 - `specs/001-record-trade/spec.md`
 - `specs/001-record-trade/plan.md`
+- `specs/shared/frontend/spec.md`
 
 ## Downstream Consumers
 
@@ -235,7 +234,7 @@ This Tasks artifact is consumed by:
 - Traceability Matrix;
 - review checklists;
 - Quickstart;
-- Copilot/AI Build Prompt;
+- Implementation Build Prompt;
 - implementation and implementation review.
 
 ## Authority Boundary
@@ -256,4 +255,4 @@ Tasks must not introduce new product behavior, change approved contracts, or sil
 
 **Status:** Human reviewed; not yet approved to drive implementation.
 
-These Tasks have been generated and reviewed, but remain pending completion of the pre-implementation package artifacts, resolution of implementation-relevant open decisions, and final analysis/review gates. `/speckit-analyze` is a pre-implementation gate and must be rerun before these Tasks are approved as the authoritative implementation checklist.
+These Tasks and their downstream package artifacts have been generated and reviewed. Tasks remain pending final `/speckit-analyze` and human approval gates before becoming the authoritative implementation checklist. `/speckit-analyze` remains a pre-implementation gate.

@@ -242,6 +242,8 @@ zero     → break-even
 
 `BigDecimal` must be used for authoritative calculations.
 
+Percentage-return division uses intermediate scale 10 with `HALF_UP` rounding. Intermediate results must not be reduced to final presentation scale prematurely. Final API scale conversion uses `HALF_UP`: 2 decimal places for `dollarPnl` and 4 decimal places for `percentageReturn`.
+
 Derived P&L and percentage return are not persisted as independent authoritative fields.
 
 ---
@@ -471,13 +473,15 @@ Error handling must:
 - avoid exposing credentials or sensitive runtime details;
 - produce client-safe messages.
 
-Exact human-readable message wording is not frozen.
+Exact human-readable validation and technical-error wording is intentionally non-contractual. Messages must remain understandable, while tests and clients rely on status codes and approved response structures rather than verbatim prose.
 
 ## 7.9 Implement Application Logging
 
 Backend trade-creation and failure paths must use structured, intentional application logging rather than ad hoc console output.
 
-Logging must provide useful diagnostic context for operation outcomes and failures without recording credentials, secrets, stack traces in client-facing output, or unnecessary sensitive trade values. Log detail must remain proportionate to the diagnostic need and consistent with the Constitution's security and privacy standards.
+Required events are successful trade creation, application-level validation rejection where appropriate, and unexpected technical/persistence failure. Safe context may include generated trade ID after persistence, normalized ticker where useful, and a high-level outcome or failure category.
+
+Logs must not contain credentials, secrets, tokens, database passwords, full request payloads, or unnecessary entry/exit prices or share quantities. Internal exception details may be logged when appropriate for diagnosis, but stack traces and internal runtime details must not be exposed in client responses.
 
 ---
 
@@ -486,6 +490,8 @@ Logging must provide useful diagnostic context for operation outcomes and failur
 ## 8.1 Establish Feature 001 UI
 
 Build a focused trade-entry experience using React, TypeScript, Vite, and Material UI.
+
+Follow `specs/shared/frontend/spec.md` for intentional Material UI composition, responsive layout, form and action patterns, loading/success/error states, accessibility, spacing, typography, and cross-feature visual consistency. Apply those conventions without changing Feature 001 fields, validation, contract, calculations, or acceptance behavior.
 
 The form must collect:
 
@@ -556,7 +562,7 @@ After successful creation, the frontend must present the recorded trade and calc
 
 The result must use the backend's authoritative normalized ticker and calculated values.
 
-Display dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places. UI formatting must not alter the backend-authoritative calculated values, and these derived-output rules must not change price or share input/persistence precision.
+Display dollar P&L and percentage return with exactly 2 fractional decimal places. Currency symbol, locale, and thousands-grouping style are presentation choices, not Feature 001 contract requirements unless already established by the repository. UI formatting must not alter backend-authoritative calculated values or input/persistence precision.
 
 ---
 
@@ -660,7 +666,7 @@ including:
 
 ## 9.5 Persistence / Integration Tests
 
-Use PostgreSQL-compatible execution where database behavior materially affects correctness.
+Use Testcontainers with a real PostgreSQL container where persistence or Flyway correctness depends on PostgreSQL behavior. H2 must not substitute for those tests. Select and pin the exact Testcontainers dependency version during implementation setup.
 
 Verify:
 
@@ -671,8 +677,6 @@ Verify:
 - `NUMERIC(19,6)` share compatibility;
 - separate IDs for repeated valid submissions;
 - no accidental persistence of derived performance fields.
-
-The exact PostgreSQL integration-test mechanism remains unresolved.
 
 ---
 
@@ -926,10 +930,8 @@ These require future approved artifacts.
 
 The following remain intentionally open and must not be silently invented:
 
-- exact human-readable validation/error wording;
 - exact PostgreSQL version;
 - exact Spring Boot/library patch versions;
-- exact PostgreSQL integration-test mechanism;
 - E2E framework;
 - production deployment target;
 - full application containerization;
@@ -974,6 +976,7 @@ This Plan is derived from:
 - `specs/001-record-trade/data-model.md`
 - `specs/001-record-trade/supporting/requirements.md`
 - `specs/001-record-trade/spec.md`
+- `specs/shared/frontend/spec.md`
 
 ## Downstream Consumers
 
@@ -985,7 +988,7 @@ This Plan must be consumed by:
 - `specs/001-record-trade/supporting/traceability-matrix.md`
 - review checklists;
 - Quickstart;
-- Copilot/AI Build Prompt;
+- Implementation Build Prompt;
 - implementation and review activities.
 
 ## Authority Boundary

@@ -522,12 +522,12 @@ percentageReturn
 
 The returned ticker is the normalized authoritative ticker value.
 
-Derived performance values are calculated authoritatively with `BigDecimal` without premature precision reduction. In the API response:
+Derived performance values are calculated authoritatively with `BigDecimal` without premature precision reduction. Percentage-return division uses intermediate scale 10 with `HALF_UP` rounding. In the API response:
 
-- `dollarPnl` is serialized to 2 decimal places;
-- `percentageReturn` is serialized to 4 decimal places.
+- `dollarPnl` is serialized to 2 decimal places using `HALF_UP`;
+- `percentageReturn` is serialized to 4 decimal places using `HALF_UP`.
 
-The frontend displays dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places. These rules apply only to derived performance and do not change approved price or share input/persistence precision.
+The frontend displays dollar P&L and percentage return with exactly 2 fractional decimal places. Currency symbol, locale, and thousands-grouping style are non-contractual presentation choices unless already established by the repository. These rules apply only to derived performance and do not change approved price or share input/persistence precision.
 
 ## 9.3 Validation Failure
 
@@ -548,7 +548,7 @@ fieldErrors
 
 `fieldErrors` associates invalid request fields with user-meaningful validation messages.
 
-The exact human-readable wording of individual validation messages is not frozen.
+Exact human-readable validation wording is intentionally non-contractual. Messages must be understandable, but tests and clients must rely on the `message` / `fieldErrors` structure and field association rather than verbatim prose.
 
 ## 9.4 Technical Failure
 
@@ -565,6 +565,8 @@ message
 ```
 
 The message must be safe for client exposure and must not reveal stack traces, credentials, or sensitive runtime details.
+
+Exact human-readable technical-error wording is intentionally non-contractual. The client-safe `message` structure and failure status are contractual; verbatim prose is not.
 
 ---
 
@@ -1380,11 +1382,9 @@ These are separate future concerns.
 
 ---
 
-# 19. Open Contract Decisions
+# 19. Contract Decisions
 
-The following decision remains unresolved and must be settled before implementation is considered complete:
-
-1. exact human-readable validation/error message wording.
+Exact human-readable validation and technical-error wording is intentionally non-contractual. Wording must be understandable but does not need to be frozen verbatim before implementation completion.
 
 The following contract decisions are now approved by this Specification:
 
@@ -1398,12 +1398,11 @@ The following contract decisions are now approved by this Specification:
 - validation-error structure defined in Section 9.3;
 - technical-error structure defined in Section 9.4;
 - rejection rather than silent rounding when submitted price/share values exceed approved persisted scale;
-- API dollar P&L serialization at 2 decimal places;
-- API percentage-return serialization at 4 decimal places;
-- UI dollar P&L currency display at 2 decimal places;
-- UI percentage-return display at 2 decimal places.
-
-The remaining unresolved decisions must not be silently invented by implementation.
+- percentage-return division at intermediate scale 10 using `HALF_UP`;
+- API dollar P&L serialization at 2 decimal places using `HALF_UP`;
+- API percentage-return serialization at 4 decimal places using `HALF_UP`;
+- UI dollar P&L display with exactly 2 fractional decimal places;
+- UI percentage-return display with exactly 2 fractional decimal places.
 
 ---
 
@@ -1456,6 +1455,7 @@ This Specification is derived from:
 - `specs/001-record-trade/supporting/architecture.md`
 - `specs/001-record-trade/data-model.md`
 - `specs/001-record-trade/supporting/requirements.md`
+- `specs/shared/frontend/spec.md` for project-wide frontend presentation and interaction conventions
 
 ## Downstream Consumers
 
@@ -1466,7 +1466,7 @@ This Specification must be consumed by:
 - `specs/001-record-trade/contracts/openapi.yaml`
 - `specs/001-record-trade/supporting/test-spec.md`
 - `specs/001-record-trade/supporting/traceability-matrix.md`
-- `specs/001-record-trade/supporting/copilot-build-prompt.md`
+- `specs/001-record-trade/supporting/implementation-build-prompt.md`
 - implementation and review activities
 
 ## Authority Boundary
@@ -1479,7 +1479,8 @@ It is subject to:
 - approved Business Rules;
 - Supporting Requirements;
 - Intended System scope;
-- approved Data Model.
+- approved Data Model;
+- the shared frontend specification within its presentation and interaction authority.
 
 It is not authoritative for:
 
@@ -1488,7 +1489,10 @@ It is not authoritative for:
 - package placement;
 - implementation sequencing;
 - infrastructure beyond approved scope;
-- detailed task breakdown.
+- detailed task breakdown;
+- project-wide frontend presentation conventions.
+
+The shared frontend specification cannot override Feature 001 business behavior, API contracts, validation, calculations, precision rules, or acceptance criteria defined by this package.
 
 ## Conflict Handling
 
