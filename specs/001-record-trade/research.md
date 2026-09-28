@@ -405,8 +405,8 @@ The exact major version must be pinned in Docker configuration so all developmen
 
 - Database setup becomes a required local-development dependency.
 - Docker will make that dependency reproducible.
-- Database migrations should eventually be managed explicitly rather than relying indefinitely on automatic schema creation.
-- Exact migration tooling is still an open decision.
+- Database migrations are managed explicitly with Flyway rather than relying on automatic schema creation.
+- JPA/Hibernate remains the application persistence/ORM layer; Flyway owns PostgreSQL schema creation and evolution.
 
 ---
 
@@ -647,18 +647,15 @@ Those costs are not justified by the current feature.
 
 ## Decision Status
 
-**Open decision.**
+**Approved: Flyway.**
 
-## Options to Evaluate
+## Decision
 
-- Flyway
-- Liquibase
+Use **Flyway** for PostgreSQL schema creation and evolution.
 
-## Current Position
+Spring Data JPA / Hibernate remains the persistence and ORM layer used by application code. Hibernate automatic schema generation is not the authoritative schema-management mechanism.
 
-The project should eventually use explicit database migrations rather than treating automatic ORM schema generation as the long-term schema-management mechanism.
-
-The specific migration tool does not need to be selected before the initial Architecture artifact unless Architecture depends on it.
+Feature 001 begins with a versioned Flyway migration that creates the approved Trade table using the Data Model's PostgreSQL representations.
 
 ---
 
@@ -693,6 +690,9 @@ No cloud provider should be selected merely to fill out the architecture.
 - PostgreSQL primary database
 - Spring Data JPA / Hibernate
 - PostgreSQL run locally in Docker
+- Flyway for versioned PostgreSQL schema migrations
+- `BigDecimal` derived-performance calculation without premature precision reduction
+- derived output scales: API dollar P&L 2 decimals, API percentage return 4 decimals, UI dollar P&L currency 2 decimals, and UI percentage return 2 decimals
 - JUnit + Spring Boot Test
 - Vitest + React Testing Library
 - no authentication for Feature 001
@@ -702,7 +702,6 @@ No cloud provider should be selected merely to fill out the architecture.
 
 ## Deferred / Open
 
-- database migration tool: Flyway vs Liquibase;
 - exact dependency patch versions at implementation time;
 - production deployment target;
 - full application containerization;
@@ -761,14 +760,12 @@ The following questions should be resolved only when their downstream artifact r
 1. What is the exact backend/frontend repository directory structure?
 2. What are the domain entities and database tables?
 3. What numeric types and precision should be used for money, percentages, and fractional shares?
-4. What rounding rules apply to displayed and stored calculated values?
-5. Will database migrations use Flyway or Liquibase?
-6. What exact REST resources and endpoint contracts are required?
-7. What global API error format should be used?
-8. What Material UI theme and visual conventions should be established?
-9. When charting becomes necessary, which chart library best fits the approved visualization requirements?
-10. What deployment environment will be used?
-11. If multi-user functionality is approved, what authentication and authorization approach will be used?
+4. What exact REST resources and endpoint contracts are required?
+5. What global API error format should be used?
+6. What Material UI theme and visual conventions should be established?
+7. When charting becomes necessary, which chart library best fits the approved visualization requirements?
+8. What deployment environment will be used?
+9. If multi-user functionality is approved, what authentication and authorization approach will be used?
 
 These questions are not blockers for completing the current Research artifact.
 

@@ -113,8 +113,8 @@ numberOfShares
 | exitDate | `LocalDate` | `DATE` |
 | exitPrice | `BigDecimal` | `NUMERIC(19,4)` |
 | numberOfShares | `BigDecimal` | `NUMERIC(19,6)` |
-| dollarPnl | `BigDecimal` derived | not persisted |
-| percentageReturn | `BigDecimal` derived | not persisted |
+| dollarPnl | `BigDecimal` derived | not persisted; API scale 2; UI currency scale 2 |
+| percentageReturn | `BigDecimal` derived | not persisted; API scale 4; UI display scale 2 |
 
 ## 4.3 Persistence Model
 
@@ -317,9 +317,9 @@ Requirements:
 - derived performance values must not become persisted authoritative columns;
 - no uniqueness constraint should reject otherwise-valid duplicate manual submissions.
 
-Database migration tooling remains unresolved.
+Use Flyway as the authoritative PostgreSQL schema-management mechanism. Configure Flyway and add an initial versioned migration that creates the approved Trade table.
 
-Implementation must not silently choose Flyway or Liquibase unless that choice is explicitly approved before migration artifacts are introduced.
+Spring Data JPA / Hibernate remains the application persistence/ORM layer. Hibernate automatic schema generation must not create or evolve the authoritative schema.
 
 ---
 
@@ -400,6 +400,8 @@ dollarPnl
 percentageReturn
 ```
 
+Derived response values must be produced from authoritative `BigDecimal` calculations without premature precision reduction. Serialize `dollarPnl` to 2 decimal places and `percentageReturn` to 4 decimal places.
+
 Dates use:
 
 ```text
@@ -470,6 +472,12 @@ Error handling must:
 - produce client-safe messages.
 
 Exact human-readable message wording is not frozen.
+
+## 7.9 Implement Application Logging
+
+Backend trade-creation and failure paths must use structured, intentional application logging rather than ad hoc console output.
+
+Logging must provide useful diagnostic context for operation outcomes and failures without recording credentials, secrets, stack traces in client-facing output, or unnecessary sensitive trade values. Log detail must remain proportionate to the diagnostic need and consistent with the Constitution's security and privacy standards.
 
 ---
 
@@ -548,9 +556,7 @@ After successful creation, the frontend must present the recorded trade and calc
 
 The result must use the backend's authoritative normalized ticker and calculated values.
 
-Exact user-visible rounding for derived P&L and percentage return remains unresolved and must not be silently invented.
-
-If display formatting requires a decision before implementation can finish, reconcile the applicable artifact first.
+Display dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places. UI formatting must not alter the backend-authoritative calculated values, and these derived-output rules must not change price or share input/persistence precision.
 
 ---
 
@@ -585,6 +591,7 @@ Cover:
 - profitable SHORT;
 - losing SHORT;
 - break-even;
+- preservation of `BigDecimal` calculation precision before output-scale conversion;
 - ticker trimming;
 - uppercase normalization.
 
@@ -642,6 +649,8 @@ including:
 - `201 Created` success;
 - approved response fields;
 - normalized ticker in response;
+- `dollarPnl` serialized to 2 decimal places;
+- `percentageReturn` serialized to 4 decimal places;
 - `400 Bad Request` for validation failure;
 - approved validation error shape;
 - `500 Internal Server Error` behavior where technically testable at the controller boundary;
@@ -656,6 +665,7 @@ Use PostgreSQL-compatible execution where database behavior materially affects c
 Verify:
 
 - Trade persistence;
+- successful application of the initial versioned Flyway Trade-table migration;
 - generated numeric ID;
 - `NUMERIC(19,4)` price compatibility;
 - `NUMERIC(19,6)` share compatibility;
@@ -676,7 +686,7 @@ Focus on user-observable behavior:
 - input interaction;
 - client-side validation feedback;
 - successful submission state;
-- calculated result presentation;
+- calculated result presentation, including dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places;
 - backend validation error presentation;
 - technical failure presentation.
 
@@ -723,9 +733,11 @@ Implementation should proceed in this order.
 
 1. implement `TradeType`;
 2. implement Trade data representation;
-3. implement persistence mapping;
-4. implement repository;
-5. verify PostgreSQL representation.
+3. configure Flyway while retaining JPA/Hibernate as the application persistence layer;
+4. add the initial versioned Trade-table migration;
+5. implement persistence mapping;
+6. implement repository;
+7. verify PostgreSQL representation and migration application.
 
 ## Phase 3 — Backend Business Logic
 
@@ -744,7 +756,8 @@ Implementation should proceed in this order.
 3. implement `POST /api/v1/trades`;
 4. implement approved HTTP status behavior;
 5. implement validation/technical error handling;
-6. add controller/API tests.
+6. implement intentional application logging for trade-creation outcomes and failure paths;
+7. add controller/API and logging verification tests.
 
 ## Phase 5 — Frontend
 
@@ -913,10 +926,7 @@ These require future approved artifacts.
 
 The following remain intentionally open and must not be silently invented:
 
-- exact user-visible/API rounding for derived dollar P&L;
-- exact user-visible/API rounding for percentage return;
 - exact human-readable validation/error wording;
-- Flyway versus Liquibase;
 - exact PostgreSQL version;
 - exact Spring Boot/library patch versions;
 - exact PostgreSQL integration-test mechanism;
@@ -1016,4 +1026,6 @@ The Plan must not silently reinterpret approved upstream artifacts.
 
 # 17. Review Status
 
-**Status:** Draft — ready for human review before `tasks.md` generation.
+**Status:** Human reviewed and approved as authoritative input to `tasks.md`.
+
+The Plan was generated for review, reconciled against the approved Specification and other upstream artifacts, and then approved to drive Tasks development. Remaining decisions explicitly listed in Section 14 stay unresolved and must be settled through the appropriate authoritative artifacts before dependent implementation or downstream artifact generation proceeds.

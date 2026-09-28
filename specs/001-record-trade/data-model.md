@@ -60,8 +60,8 @@ A Trade must contain both entry and exit information because Feature 001 does no
 | `exitDate` | Date | Yes | Yes | Must be same as or later than entry date |
 | `exitPrice` | Decimal | Yes | Yes | Must be greater than zero |
 | `numberOfShares` | Decimal | Yes | Yes | Must be greater than zero; fractional shares allowed |
-| `dollarPnl` | Decimal | Derived | No | Calculated from persisted trade facts |
-| `percentageReturn` | Decimal | Derived | No | Calculated from persisted trade facts |
+| `dollarPnl` | Decimal | Derived | No | Calculated with `BigDecimal`; API scale 2, UI currency display scale 2 |
+| `percentageReturn` | Decimal | Derived | No | Calculated with `BigDecimal`; API scale 4, UI display scale 2 |
 
 No additional Feature 001 fields are approved by this Data Model.
 
@@ -503,7 +503,7 @@ Use `BigDecimal` for:
 
 ## Internal Calculation
 
-Calculations should preserve sufficient precision during intermediate operations rather than converting values to binary floating-point types.
+Calculations must preserve sufficient precision during intermediate operations rather than converting values to binary floating-point types or reducing scale prematurely.
 
 ## Persisted Input Scale
 
@@ -515,18 +515,16 @@ The Feature 001 persisted input scales are:
 | Exit Price | `NUMERIC(19,4)` |
 | Number of Shares | `NUMERIC(19,6)` |
 
-## Derived Output Rounding
+## Derived Output Precision and Presentation
 
-The exact number of decimal places presented through:
+Derived performance output uses these approved scales:
 
-- REST responses;
-- frontend display;
-- user-facing currency formatting;
-- user-facing percentage formatting
+| Value | API serialization | UI presentation |
+|---|---|---|
+| Dollar P&L | 2 decimal places | Currency with 2 decimal places |
+| Percentage return | 4 decimal places | Percentage with 2 decimal places |
 
-is not frozen by this Data Model.
-
-Those presentation/contract rules belong to Supporting Requirements, Specification, and OpenAPI.
+These output rules apply only to derived performance values. They do not change the approved input or persistence scales for prices and share quantities.
 
 The implementation must not silently convert derived calculations to floating-point values.
 
@@ -804,13 +802,10 @@ The following remain unresolved because they are not required to freeze the Feat
 
 1. maximum ticker length;
 2. detailed ticker character rules;
-3. exact API/display rounding for P&L;
-4. exact API/display rounding for percentage return;
-5. Flyway versus Liquibase;
-6. exact PostgreSQL migration DDL;
-7. future multi-asset representation;
-8. future handling of fees, commissions, dividends, multiple entries, or multiple exits;
-9. future user/account relationships if multi-user functionality is approved.
+3. exact PostgreSQL migration DDL beyond the approved Data Model constraints;
+4. future multi-asset representation;
+5. future handling of fees, commissions, dividends, multiple entries, or multiple exits;
+6. future user/account relationships if multi-user functionality is approved.
 
 These must not be silently resolved by implementation.
 

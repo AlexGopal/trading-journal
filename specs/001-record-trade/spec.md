@@ -522,6 +522,13 @@ percentageReturn
 
 The returned ticker is the normalized authoritative ticker value.
 
+Derived performance values are calculated authoritatively with `BigDecimal` without premature precision reduction. In the API response:
+
+- `dollarPnl` is serialized to 2 decimal places;
+- `percentageReturn` is serialized to 4 decimal places.
+
+The frontend displays dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places. These rules apply only to derived performance and do not change approved price or share input/persistence precision.
+
 ## 9.3 Validation Failure
 
 A request that violates an approved Feature 001 validation rule returns:
@@ -691,7 +698,7 @@ Behavioral interpretation:
 Profit
 ```
 
-The exact displayed percentage rounding remains downstream contract/presentation behavior.
+The API serializes this percentage return to 4 decimal places, and the UI displays it with 2 decimal places.
 
 ---
 
@@ -1375,11 +1382,9 @@ These are separate future concerns.
 
 # 19. Open Contract Decisions
 
-The following decisions remain unresolved and must be settled before implementation is considered complete:
+The following decision remains unresolved and must be settled before implementation is considered complete:
 
-1. exact user-visible rounding for dollar P&L;
-2. exact user-visible rounding for percentage return;
-3. exact human-readable validation/error message wording.
+1. exact human-readable validation/error message wording.
 
 The following contract decisions are now approved by this Specification:
 
@@ -1392,7 +1397,11 @@ The following contract decisions are now approved by this Specification:
 - success-response fields defined in Section 9.2;
 - validation-error structure defined in Section 9.3;
 - technical-error structure defined in Section 9.4;
-- rejection rather than silent rounding when submitted price/share values exceed approved persisted scale.
+- rejection rather than silent rounding when submitted price/share values exceed approved persisted scale;
+- API dollar P&L serialization at 2 decimal places;
+- API percentage-return serialization at 4 decimal places;
+- UI dollar P&L currency display at 2 decimal places;
+- UI percentage-return display at 2 decimal places.
 
 The remaining unresolved decisions must not be silently invented by implementation.
 
@@ -1404,8 +1413,8 @@ The remaining unresolved decisions must not be silently invented by implementati
 
 | User Story | Requirements | Business Rules |
 |---|---|---|
-| US-001 | FR-001, FR-003–FR-020, FR-023, FR-024 | BR-001–BR-019 as applicable |
-| US-002 | FR-001, FR-003–FR-020, FR-023, FR-024 | BR-001–BR-019 as applicable |
+| US-001 | FR-001–FR-024 | BR-001–BR-019 as applicable |
+| US-002 | FR-001–FR-024 | BR-001–BR-019 as applicable |
 | US-003 | FR-004–FR-011, FR-024, TEST-004, SEC-002 | BR-003–BR-010, BR-019 |
 
 ## 20.2 Behavioral Traceability
@@ -1501,6 +1510,6 @@ Downstream artifacts must not silently reinterpret approved Specification behavi
 
 # 22. Review Status
 
-**Status:** Draft — ready for serious cross-artifact review.
+**Status:** Human reviewed and approved as authoritative input to `plan.md`.
 
-This Specification must be reviewed against all approved upstream artifacts before `plan.md` is generated.
+The Specification was generated for review, reconciled against its approved upstream artifacts, and then approved to drive Plan development. Later downstream artifacts do not alter this approval and must remain consistent with this Specification.

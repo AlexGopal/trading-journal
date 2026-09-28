@@ -370,7 +370,9 @@ After successful trade processing, the application shall make the calculated:
 
 available to the frontend for presentation to the user.
 
-The exact API response shape and presentation format are deferred to Specification and OpenAPI.
+Derived output shall preserve `BigDecimal` calculation precision until the approved output boundary. API dollar P&L shall use 2 decimal places and API percentage return shall use 4 decimal places. The UI shall display dollar P&L as currency with 2 decimal places and percentage return with 2 decimal places.
+
+These derived-output rules do not change approved input or persistence precision for prices or share quantities. The complete API response shape remains owned by Specification and OpenAPI.
 
 **Upstream basis:**
 - Intended System
@@ -819,13 +821,15 @@ Local PostgreSQL shall run through Docker using repository-controlled configurat
 
 Automatic ORM schema generation shall not become the permanent schema-management mechanism.
 
-Explicit, reviewable migrations shall be introduced once migration tooling is selected.
+Explicit, reviewable Flyway migrations shall be the authoritative PostgreSQL schema-management mechanism.
 
 ---
 
-## PER-004 — Migration Tool Remains Open
+## PER-004 — Use Flyway for Schema Migrations
 
-No Feature 001 implementation artifact shall silently choose Flyway or Liquibase before that decision is explicitly approved.
+Feature 001 shall use Flyway for PostgreSQL schema creation and evolution while retaining Spring Data JPA / Hibernate as the application persistence/ORM layer.
+
+Hibernate automatic schema generation shall not be authoritative. The initial implementation shall include a versioned migration for the approved Trade table.
 
 ---
 
@@ -854,7 +858,9 @@ Automated tests shall verify approved:
 - SHORT dollar P&L;
 - LONG percentage return;
 - SHORT percentage return;
-- profit/loss/break-even outcomes.
+- profit/loss/break-even outcomes;
+- preservation of `BigDecimal` calculation precision until the approved output boundary;
+- API serialization of dollar P&L at 2 decimal places and percentage return at 4 decimal places.
 
 ---
 
@@ -889,7 +895,7 @@ The complete Spring context should not be loaded for every test when a narrower 
 
 ## TEST-006 — PostgreSQL-Sensitive Integration Testing
 
-Where correctness materially depends on PostgreSQL behavior, integration testing shall use PostgreSQL-compatible execution rather than assuming H2 is equivalent.
+Where correctness materially depends on PostgreSQL behavior, integration testing shall use PostgreSQL-compatible execution rather than assuming H2 is equivalent. Integration tests shall verify that Flyway applies the initial versioned Trade-table migration successfully.
 
 The exact mechanism remains unresolved.
 
@@ -911,7 +917,9 @@ Frontend tests shall focus on meaningful user-observable behavior including:
 - form interaction;
 - validation feedback;
 - success states;
-- error states.
+- error states;
+- dollar P&L currency display at 2 decimal places;
+- percentage-return display at 2 decimal places.
 
 Tests shall avoid depending unnecessarily on component implementation details.
 
@@ -1169,10 +1177,10 @@ The current approved assumptions are:
 
 ## RQ-RISK-001 — Numeric and Display Rounding Drift
 
-The Data Model defines persisted precision but does not yet freeze API/display rounding.
+Derived output precision can drift if calculation, API serialization, and UI formatting apply inconsistent scales or reduce precision prematurely.
 
 **Handling:**  
-Specification/OpenAPI must define any user-visible or contract-level rounding behavior before implementation is considered complete.
+Keep authoritative calculations in `BigDecimal`, preserve intermediate precision, serialize API dollar P&L to 2 decimal places and percentage return to 4 decimal places, and display them in the UI at 2 decimal places as approved.
 
 ---
 
@@ -1209,9 +1217,6 @@ The following remain unresolved and must not be silently invented:
 
 - maximum ticker length;
 - ticker character restrictions;
-- exact P&L display rounding;
-- exact percentage-return display rounding;
-- Flyway vs Liquibase;
 - exact PostgreSQL version;
 - exact Spring Boot/library patch versions;
 - database integration-test mechanism;

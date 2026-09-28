@@ -348,13 +348,11 @@ Those decisions must be made deliberately in the Data Model and Requirements.
 
 ## 7.3 Schema Evolution
 
-Production-quality schema evolution must eventually use explicit database migrations.
+PostgreSQL schema creation and evolution use explicit, versioned Flyway migrations.
 
-The choice between Flyway and Liquibase remains unresolved.
+Spring Data JPA / Hibernate remains the application persistence/ORM layer, while Flyway owns the authoritative schema lifecycle. Hibernate automatic schema generation must not be used as the authoritative schema-management strategy.
 
-Architecture does not require either tool for Feature 001 until that decision is approved.
-
-Automatic ORM schema generation must not become the permanent schema-management strategy.
+Feature 001 must include an initial versioned migration for the approved Trade table.
 
 ---
 
@@ -728,7 +726,10 @@ The following are now resolved by approved downstream artifacts:
 - price precision: `NUMERIC(19,4)`;
 - share precision: `NUMERIC(19,6)`;
 - calculated performance values are derived rather than independently persisted;
-- excess submitted price/share scale is rejected rather than silently rounded.
+- excess submitted price/share scale is rejected rather than silently rounded;
+- Flyway owns versioned PostgreSQL schema creation and evolution;
+- API dollar P&L uses 2 decimal places and API percentage return uses 4 decimal places;
+- UI dollar P&L uses currency formatting with 2 decimal places and UI percentage return uses 2 decimal places.
 
 These decisions remain owned by their authoritative downstream artifacts and are listed here only to reflect current project state.
 
@@ -739,9 +740,6 @@ The following remain intentionally unresolved:
 - exact Java package structure;
 - exact frontend directory/component structure;
 - exact repository layout where not already established;
-- user-visible/API rounding for derived dollar P&L;
-- user-visible/API rounding for derived percentage return;
-- Flyway versus Liquibase;
 - exact PostgreSQL version;
 - exact Spring Boot and library patch versions;
 - database integration-test mechanism;
