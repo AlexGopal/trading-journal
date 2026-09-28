@@ -694,46 +694,53 @@ Containerize PostgreSQL only for the initial local environment and defer additio
 
 ---
 
-# 18. Known Upstream Consistency Note
+# 18. Upstream Consistency Status
 
-One upstream documentation inconsistency remains visible:
+The previously identified Intended System / Trade Type mismatch has been reconciled.
 
-`supporting/intended-system.md` lists Feature 001 trade-entry information as:
+The approved Feature 001 input set now consistently includes:
 
 - ticker;
+- trade type (`LONG` or `SHORT`);
 - entry date;
 - entry price;
 - exit date;
 - exit price;
 - number of shares.
 
-`supporting/business-rules.md` additionally defines `BR-002`, which requires trade direction to be `LONG` or `SHORT`.
-
-The approved project direction also includes Trade Type.
-
-This Architecture does not redefine the feature input contract and therefore does not silently resolve the upstream mismatch.
-
-Before Feature 001 Specification is frozen, the Intended System should be reconciled so the Feature 001 input summary includes Trade Type or otherwise explicitly acknowledges the later approved refinement.
-
-This issue does **not** change the architectural structure defined in this document.
+No unresolved upstream consistency issue remains in this area.
 
 ---
 
 # 19. Remaining Architectural / Downstream Decisions
 
-The following decisions remain intentionally unresolved because the current Architecture does not require them to be fixed:
+Some decisions intentionally delegated by Architecture have since been resolved by downstream artifacts.
+
+## 19.1 Resolved Downstream
+
+The following are now resolved by approved downstream artifacts:
+
+- REST API versioning convention: path-based `/api/v1`;
+- Feature 001 create endpoint: `POST /api/v1/trades`;
+- request and response field sets;
+- HTTP success and failure status behavior;
+- validation and technical-error response structures;
+- price precision: `NUMERIC(19,4)`;
+- share precision: `NUMERIC(19,6)`;
+- calculated performance values are derived rather than independently persisted;
+- excess submitted price/share scale is rejected rather than silently rounded.
+
+These decisions remain owned by their authoritative downstream artifacts and are listed here only to reflect current project state.
+
+## 19.2 Still Unresolved
+
+The following remain intentionally unresolved:
 
 - exact Java package structure;
 - exact frontend directory/component structure;
 - exact repository layout where not already established;
-- exact REST endpoint paths;
-- final API versioning convention;
-- request and response schemas;
-- API error payload format;
-- database tables and identifiers;
-- numeric precision and scale;
-- rounding rules;
-- whether calculated performance values are stored or derived;
+- user-visible/API rounding for derived dollar P&L;
+- user-visible/API rounding for derived percentage return;
 - Flyway versus Liquibase;
 - exact PostgreSQL version;
 - exact Spring Boot and library patch versions;
@@ -848,6 +855,6 @@ Downstream artifacts must not silently reinterpret this Architecture.
 
 # 22. Review Status
 
-**Status:** Draft — ready for human review after reconciliation of the identified Intended System / Trade Type documentation mismatch.
+**Status:** Draft — ready for human review.
 
 Once reviewed and accepted, this Architecture becomes authoritative upstream input for `data-model.md`.

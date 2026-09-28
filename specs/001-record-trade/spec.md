@@ -311,6 +311,8 @@ The following approved Business Rules apply directly to Feature 001:
 | BR-015 | Positive/negative/zero result interpretation |
 | BR-016 | Completed trades only |
 | BR-017 | Manual trade entry |
+| BR-018 | Duplicate valid manual submissions are recorded separately |
+| BR-019 | Trim ticker whitespace before uppercase normalization |
 
 The Specification does not redefine these rules.
 
@@ -428,56 +430,134 @@ Examples of valid conceptual quantities include:
 
 ## VAL-010 — Ticker Normalization
 
-A valid ticker must be normalized to uppercase before persistence.
+Leading and trailing whitespace must be removed from ticker input before final non-blank validation and uppercase normalization.
 
-Example:
+Examples:
 
 ```text
 aapl → AAPL
+"  aapl  " → AAPL
 ```
+
+If trimming results in an empty value, the ticker is invalid.
 
 No external ticker-existence validation is required.
 
 ---
 
+## VAL-011 — Approved Decimal Scale
+
+Trade input must fit the approved persisted scale.
+
+The system must reject:
+
+- entry price values with more than 4 fractional decimal places;
+- exit price values with more than 4 fractional decimal places;
+- number-of-shares values with more than 6 fractional decimal places.
+
+The system must not silently round these authoritative submitted trade facts.
+
+---
+
+## 8.1 Duplicate Submission Behavior
+
+Feature 001 does not perform automatic duplicate detection.
+
+If the same valid completed-trade information is submitted more than once, each successful submission creates a separate trade with its own generated identifier.
+
+This behavior applies to manual Feature 001 submissions only and does not define future import-deduplication behavior.
+
+---
+
 # 9. API Behavior
 
-Feature 001 exposes its trade-recording behavior through the approved REST API boundary.
+Feature 001 exposes trade creation through:
 
-The API must support a client request that supplies the approved trade-entry facts:
+```text
+POST /api/v1/trades
+```
 
-- ticker;
-- trade type;
-- entry date;
-- entry price;
-- exit date;
-- exit price;
-- number of shares.
+The `/api/v1` prefix is the approved initial path-based API versioning convention.
 
-A successful response must make available:
+No additional trade endpoint is required by Feature 001.
 
-- the recorded trade facts;
-- the generated trade identifier;
-- calculated dollar P&L;
-- calculated percentage return.
+## 9.1 Request Contract
 
-The API must reject invalid requests according to the approved validation rules.
+The request body contains:
 
-The exact:
+```text
+ticker
+tradeType
+entryDate
+entryPrice
+exitDate
+exitPrice
+numberOfShares
+```
 
-- endpoint path;
-- HTTP method;
-- HTTP status codes;
-- JSON property names;
-- request schema;
-- response schema;
-- validation-error schema;
-- global error shape;
-- API version prefix
+Dates use ISO local-date form `YYYY-MM-DD`.
 
-are intentionally not frozen in this Specification unless approved during Specification review.
+## 9.2 Successful Creation
 
-They must be finalized before OpenAPI is frozen.
+A successfully recorded trade returns:
+
+```text
+201 Created
+```
+
+The response body contains:
+
+```text
+id
+ticker
+tradeType
+entryDate
+entryPrice
+exitDate
+exitPrice
+numberOfShares
+dollarPnl
+percentageReturn
+```
+
+The returned ticker is the normalized authoritative ticker value.
+
+## 9.3 Validation Failure
+
+A request that violates an approved Feature 001 validation rule returns:
+
+```text
+400 Bad Request
+```
+
+The trade must not be persisted.
+
+The response contains:
+
+```text
+message
+fieldErrors
+```
+
+`fieldErrors` associates invalid request fields with user-meaningful validation messages.
+
+The exact human-readable wording of individual validation messages is not frozen.
+
+## 9.4 Technical Failure
+
+An unexpected technical or persistence failure that prevents successful completion returns:
+
+```text
+500 Internal Server Error
+```
+
+The response contains:
+
+```text
+message
+```
+
+The message must be safe for client exposure and must not reveal stack traces, credentials, or sensitive runtime details.
 
 ---
 
@@ -556,7 +636,7 @@ When submitted input violates an approved validation rule:
 - the user must receive an error outcome;
 - the application must not report success.
 
-The exact HTTP status code and payload shape remain OpenAPI decisions.
+The HTTP status and payload shape are defined by Section 9.3 and must be reflected consistently in OpenAPI.
 
 ## 13.2 Persistence or Technical Failure
 
@@ -566,7 +646,7 @@ When the backend cannot complete the operation because of a technical or persist
 - incomplete state must not be presented as a successfully recorded trade;
 - internal stack traces or sensitive runtime details must not be exposed to the user.
 
-The exact external technical-error contract remains an OpenAPI decision.
+The external technical-error contract is defined by Section 9.4 and must be reflected consistently in OpenAPI.
 
 ---
 
@@ -947,7 +1027,76 @@ Values within the approved Data Model precision must be representable.
 
 Values outside approved persistence precision must not be silently altered in a way that changes business meaning.
 
-The exact rejection/rounding behavior for values exceeding allowed input scale must be finalized before OpenAPI and implementation are frozen.
+Values exceeding the approved input scale must be rejected rather than silently rounded.
+
+---
+
+## EDGE-011 — Ticker With Surrounding Whitespace
+
+Input:
+
+```text
+"  aapl  "
+```
+
+Expected behavior:
+
+```text
+AAPL
+```
+
+The surrounding whitespace is removed before uppercase normalization.
+
+---
+
+## EDGE-012 — Duplicate Valid Submission
+
+Given the same valid completed-trade information is successfully submitted twice:
+
+Expected behavior:
+
+```text
+two separately persisted trades
+two distinct generated identifiers
+```
+
+Feature 001 does not automatically reject or merge the second submission as a duplicate.
+
+---
+
+## EDGE-013 — Excess Price Scale
+
+Input:
+
+```text
+entryPrice = 100.12345
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+because Feature 001 prices support at most 4 fractional decimal places.
+
+---
+
+## EDGE-014 — Excess Share Scale
+
+Input:
+
+```text
+numberOfShares = 1.1234567
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+because Feature 001 share quantities support at most 6 fractional decimal places.
 
 ---
 
@@ -972,7 +1121,11 @@ The following invariants must remain true for every successfully recorded Featur
 15. performance values are derived from authoritative trade facts;
 16. calculated performance is not stored as independent authoritative database state;
 17. no external market or brokerage system is required;
-18. authentication is not required for Feature 001.
+18. authentication is not required for Feature 001;
+19. leading and trailing ticker whitespace is removed before uppercase normalization;
+20. submitted price values do not exceed 4 fractional decimal places;
+21. submitted share quantities do not exceed 6 fractional decimal places;
+22. repeated valid manual submissions are stored as separate trades rather than automatically deduplicated.
 
 ---
 
@@ -1173,6 +1326,32 @@ then recording a trade must not require a brokerage, market-data provider, authe
 
 ---
 
+## AC-016 — Ticker Whitespace Normalization
+
+Given `ticker = "  aapl  "`, when an otherwise valid trade is recorded, then the authoritative ticker is `AAPL`.
+
+---
+
+## AC-017 — Duplicate Valid Submission
+
+Given the same valid completed-trade information has already been recorded, when the user submits that valid trade information again, then:
+
+- the second submission is accepted;
+- a second trade is persisted;
+- the second trade receives its own generated identifier.
+
+---
+
+## AC-018 — Excess Decimal Scale
+
+Given a submitted price has more than 4 fractional decimal places or a submitted share quantity has more than 6 fractional decimal places, when the user submits the trade, then:
+
+- the trade is rejected;
+- the value is not silently rounded into an accepted authoritative trade;
+- the trade is not persisted.
+
+---
+
 # 18. Non-Goals
 
 Feature 001 does not attempt to solve:
@@ -1196,23 +1375,26 @@ These are separate future concerns.
 
 # 19. Open Contract Decisions
 
-The following decisions remain unresolved and must be settled before OpenAPI and implementation are frozen:
+The following decisions remain unresolved and must be settled before implementation is considered complete:
 
-1. exact REST endpoint path;
-2. exact HTTP method if not already implied by final resource design;
-3. API versioning convention;
-4. exact request JSON schema;
-5. exact success-response JSON schema;
-6. exact validation-error schema;
-7. exact technical-error schema;
-8. exact HTTP status codes;
-9. exact user-visible rounding for dollar P&L;
-10. exact user-visible rounding for percentage return;
-11. exact behavior for input values exceeding approved decimal scale.
+1. exact user-visible rounding for dollar P&L;
+2. exact user-visible rounding for percentage return;
+3. exact human-readable validation/error message wording.
 
-These unresolved decisions do not alter the approved Feature 001 business behavior.
+The following contract decisions are now approved by this Specification:
 
-They must not be silently invented by implementation.
+- path-based API versioning using `/api/v1`;
+- `POST /api/v1/trades` for Feature 001 trade creation;
+- `201 Created` for successful creation;
+- `400 Bad Request` for validation failure;
+- `500 Internal Server Error` for unexpected technical/persistence failure;
+- request fields defined in Section 9.1;
+- success-response fields defined in Section 9.2;
+- validation-error structure defined in Section 9.3;
+- technical-error structure defined in Section 9.4;
+- rejection rather than silent rounding when submitted price/share values exceed approved persisted scale.
+
+The remaining unresolved decisions must not be silently invented by implementation.
 
 ---
 
@@ -1222,9 +1404,9 @@ They must not be silently invented by implementation.
 
 | User Story | Requirements | Business Rules |
 |---|---|---|
-| US-001 | FR-001, FR-003–FR-020 | BR-001–BR-017 as applicable |
-| US-002 | FR-001, FR-003–FR-020 | BR-001–BR-017 as applicable |
-| US-003 | FR-004–FR-011, TEST-004, SEC-002 | BR-003–BR-010 |
+| US-001 | FR-001, FR-003–FR-020, FR-023, FR-024 | BR-001–BR-019 as applicable |
+| US-002 | FR-001, FR-003–FR-020, FR-023, FR-024 | BR-001–BR-019 as applicable |
+| US-003 | FR-004–FR-011, FR-024, TEST-004, SEC-002 | BR-003–BR-010, BR-019 |
 
 ## 20.2 Behavioral Traceability
 
@@ -1232,6 +1414,8 @@ They must not be silently invented by implementation.
 |---|---|
 | Completed stock trade scope | Intended System, BR-001, BR-016 |
 | Manual entry | BR-017 |
+| Duplicate submission behavior | BR-018 |
+| Ticker whitespace normalization | BR-019 |
 | LONG/SHORT support | BR-002 |
 | Ticker behavior | BR-003, BR-004 |
 | Price validation | BR-005, BR-006 |

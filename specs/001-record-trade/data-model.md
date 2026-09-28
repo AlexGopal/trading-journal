@@ -65,6 +65,8 @@ A Trade must contain both entry and exit information because Feature 001 does no
 
 No additional Feature 001 fields are approved by this Data Model.
 
+Repeated valid manual submissions do not require a uniqueness constraint or duplicate-detection field. Under BR-018, each successful submission is represented by a separate `Trade` with its own generated identifier.
+
 ---
 
 # 3. Trade Identifier
@@ -163,14 +165,16 @@ Textual column representation.
 Ticker:
 
 - is required;
-- must not be blank;
+- has leading and trailing whitespace removed before final non-blank validation;
+- must not be blank after trimming;
 - is normalized to uppercase before the trade is persisted;
 - is displayed using the normalized uppercase representation.
 
-Example:
+Examples:
 
 ```text
 aapl → AAPL
+"  aapl  " → AAPL
 ```
 
 ## Intentionally Unresolved
@@ -188,6 +192,7 @@ These remain downstream or future decisions.
 
 - BR-003 — Ticker Required
 - BR-004 — Ticker Normalization
+- BR-019 — Ticker Whitespace Normalization
 
 ---
 
@@ -535,6 +540,7 @@ The conceptual Trade model must satisfy all approved Feature 001 business constr
 |---|---|
 | Ticker required | BR-003 |
 | Ticker normalized uppercase | BR-004 |
+| Ticker trimmed before final non-blank validation and uppercase normalization | BR-019 |
 | Entry price > 0 | BR-005 |
 | Exit price > 0 | BR-006 |
 | Shares > 0 | BR-007 |

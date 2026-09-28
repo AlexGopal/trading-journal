@@ -333,6 +333,46 @@ Approved Intended System decision.
 **Notes / Uncertainty:**  
 Automatic trade import, brokerage synchronization, and other external trade-ingestion mechanisms are future possibilities and are not part of Feature 001.
 
+### BR-018 — Duplicate Manual Submissions
+
+**Rule Statement:**  
+Feature 001 does not perform automatic duplicate-trade detection.
+
+If the user intentionally submits the same valid completed-trade information more than once, each successful submission is recorded as a separate trade with its own generated identifier.
+
+**Source or Approval Basis:**  
+Approved Feature 001 review decision.
+
+**Status:** Approved
+
+**Notes / Uncertainty:**  
+Future duplicate-detection or import-deduplication behavior would require a separate approved rule.
+
+---
+
+### BR-019 — Ticker Whitespace Normalization
+
+**Rule Statement:**  
+Leading and trailing whitespace must be removed from the ticker before required/non-blank validation is finalized and before uppercase normalization.
+
+For example:
+
+```text
+"  aapl  " → "AAPL"
+```
+
+If trimming results in an empty value, the ticker is invalid.
+
+**Source or Approval Basis:**  
+Approved Feature 001 review decision.
+
+**Status:** Approved
+
+**Notes / Uncertainty:**  
+Detailed ticker-character restrictions and maximum ticker length remain unresolved.
+
+---
+
 ## Calculation Examples
 
 ### Example 1 — Profitable Long Trade
@@ -433,7 +473,7 @@ These items are future considerations only and must not be treated as current re
 
 The following details are intentionally unresolved and should be handled by appropriate downstream artifacts or future feature decisions:
 
-- numeric precision and rounding rules for prices, share quantities, P&L, and percentage return;
+- user-visible/API rounding rules for calculated P&L and percentage return;
 - maximum permitted ticker length and any detailed ticker-character rules;
 - whether future features will support open positions;
 - how future features will represent trades with multiple entries or exits;
@@ -463,6 +503,8 @@ These uncertainties do not prevent the approved Feature 001 business rules from 
 | BR-015 | Profit/loss/break-even interpretation | Approved Feature 001 decision |
 | BR-016 | Completed trades only | Project scope / Intended System |
 | BR-017 | Manual trade entry | Intended System |
+| BR-018 | Duplicate submissions recorded separately | Approved Feature 001 review decision |
+| BR-019 | Trim ticker whitespace before uppercase normalization | Approved Feature 001 review decision |
 
 ## Artifact Relationships
 
