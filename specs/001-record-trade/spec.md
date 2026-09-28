@@ -1,0 +1,1322 @@
+# Trading Journal and Analysis App — Feature 001 Specification
+
+## Feature Overview
+
+Feature 001 enables the user to manually record a completed stock trade and obtain its calculated performance.
+
+The feature supports completed stock trades only and accepts the following trade information:
+
+- ticker;
+- trade type (`LONG` or `SHORT`);
+- entry date;
+- entry price;
+- exit date;
+- exit price;
+- number of shares.
+
+The system validates the submitted trade, normalizes approved values, calculates dollar profit/loss and percentage return using the approved LONG/SHORT formulas, persists the approved trade facts, and makes the calculated performance available to the user.
+
+Feature 001 does not include open positions, market-data integration, brokerage integration, authentication, charting, strategy tracking, indicator tracking, or other future capabilities.
+
+---
+
+# 1. Objective
+
+The objective of Feature 001 is to establish the first usable trading-journal workflow:
+
+```text
+Enter completed stock trade
+        ↓
+Validate approved trade data
+        ↓
+Calculate trade performance
+        ↓
+Persist the completed trade
+        ↓
+Present the recorded trade and its calculated result
+```
+
+The feature must provide a reliable foundation for later trade-history and analysis features without implementing those future features now.
+
+---
+
+# 2. Scope
+
+## 2.1 In Scope
+
+Feature 001 includes:
+
+- manual entry of a completed stock trade;
+- stock trades only;
+- `LONG` and `SHORT` trade types;
+- ticker entry;
+- ticker uppercase normalization;
+- entry date;
+- entry price;
+- exit date;
+- exit price;
+- number of shares;
+- fractional shares;
+- approved validation;
+- dollar P&L calculation;
+- percentage return calculation;
+- persistence of approved trade facts;
+- presentation of the recorded trade and calculated performance;
+- React + TypeScript frontend;
+- Spring Boot backend;
+- REST communication;
+- PostgreSQL persistence.
+
+## 2.2 Out of Scope
+
+Feature 001 does not include:
+
+- open positions;
+- trade editing;
+- trade deletion;
+- advanced trade-history browsing;
+- strategy/setup tracking;
+- MACD;
+- RSI;
+- moving-average calculations;
+- dashboards;
+- charts;
+- live market data;
+- automatic price retrieval;
+- automatic trade import;
+- brokerage integration;
+- multi-user functionality;
+- authentication;
+- authorization;
+- AI-assisted analysis;
+- automated trading;
+- additional asset types;
+- commissions;
+- fees;
+- dividends;
+- multiple entries;
+- multiple exits.
+
+Future capabilities require separate approval and specification.
+
+---
+
+# 3. Actors
+
+## Primary Actor
+
+**Individual Trader**
+
+The initial user is an individual retail trader using the application to record and review their own trading activity.
+
+Feature 001 assumes a single-user application.
+
+## External Actors
+
+Feature 001 has no required external system actor.
+
+There is no:
+
+- brokerage;
+- market-data provider;
+- authentication provider;
+- trading platform;
+- AI service
+
+in the Feature 001 runtime flow.
+
+---
+
+# 4. Preconditions
+
+Before the Feature 001 workflow can complete successfully:
+
+1. the frontend application is available;
+2. the backend application is available;
+3. PostgreSQL is available to the backend;
+4. the user supplies all required Feature 001 trade information;
+5. the supplied information satisfies the approved validation rules.
+
+Authentication is not a precondition.
+
+---
+
+# 5. User Stories
+
+## US-001 — Record a Completed Long Trade
+
+As an individual trader, I want to record a completed `LONG` stock trade so that I can preserve the trade in my journal and see whether it made or lost money.
+
+### Acceptance Intent
+
+The system must:
+
+- accept approved LONG trade input;
+- validate the trade;
+- normalize the ticker;
+- calculate LONG dollar P&L;
+- calculate LONG percentage return;
+- persist the trade facts;
+- present the recorded trade and its calculated performance.
+
+---
+
+## US-002 — Record a Completed Short Trade
+
+As an individual trader, I want to record a completed `SHORT` stock trade so that I can preserve the trade in my journal and see whether it made or lost money.
+
+### Acceptance Intent
+
+The system must:
+
+- accept approved SHORT trade input;
+- validate the trade;
+- normalize the ticker;
+- calculate SHORT dollar P&L;
+- calculate SHORT percentage return;
+- persist the trade facts;
+- present the recorded trade and its calculated performance.
+
+---
+
+## US-003 — Receive Validation Feedback
+
+As an individual trader, I want invalid trade information to be rejected so that the journal does not store trades that violate the approved Feature 001 rules.
+
+### Acceptance Intent
+
+The system must reject data that violates approved Feature 001 validation requirements.
+
+---
+
+# 6. Behavioral Specification
+
+## 6.1 Successful Trade Submission
+
+When the user submits a valid completed stock trade:
+
+1. the application accepts the submitted values;
+2. the backend validates the approved business constraints;
+3. the ticker is normalized to uppercase;
+4. the backend determines the calculation path from `tradeType`;
+5. dollar P&L is calculated;
+6. percentage return is calculated;
+7. the approved trade facts are persisted;
+8. the calculated performance is made available to the frontend;
+9. the frontend presents the successful recorded-trade result.
+
+The backend is authoritative for acceptance, normalization, and calculation.
+
+Frontend validation may provide earlier feedback but cannot override backend validation.
+
+---
+
+## 6.2 LONG Trade Behavior
+
+When:
+
+```text
+tradeType = LONG
+```
+
+the system must calculate:
+
+```text
+Dollar P&L =
+(Exit Price - Entry Price) × Number of Shares
+```
+
+and:
+
+```text
+Percentage Return =
+((Exit Price - Entry Price) / Entry Price) × 100
+```
+
+---
+
+## 6.3 SHORT Trade Behavior
+
+When:
+
+```text
+tradeType = SHORT
+```
+
+the system must calculate:
+
+```text
+Dollar P&L =
+(Entry Price - Exit Price) × Number of Shares
+```
+
+and:
+
+```text
+Percentage Return =
+((Entry Price - Exit Price) / Entry Price) × 100
+```
+
+---
+
+## 6.4 Performance Interpretation
+
+After the appropriate LONG or SHORT calculation:
+
+- positive P&L/return means profit;
+- negative P&L/return means loss;
+- zero P&L/return means break-even.
+
+---
+
+## 6.5 Persistence Behavior
+
+On successful processing, the system persists:
+
+- generated trade identifier;
+- ticker;
+- trade type;
+- entry date;
+- entry price;
+- exit date;
+- exit price;
+- number of shares.
+
+The system does not persist dollar P&L or percentage return as independent authoritative fields.
+
+Those values are derived from the persisted trade facts.
+
+---
+
+# 7. Business Rules
+
+The following approved Business Rules apply directly to Feature 001:
+
+| Rule ID | Behavior |
+|---|---|
+| BR-001 | Feature 001 supports completed stock trades |
+| BR-002 | Trade type is LONG or SHORT |
+| BR-003 | Ticker is required |
+| BR-004 | Ticker is normalized to uppercase |
+| BR-005 | Entry price > 0 |
+| BR-006 | Exit price > 0 |
+| BR-007 | Shares > 0 and fractional shares are allowed |
+| BR-008 | Entry date is required |
+| BR-009 | Exit date is required |
+| BR-010 | Exit date >= entry date; same-day trades are valid |
+| BR-011 | LONG dollar P&L formula |
+| BR-012 | SHORT dollar P&L formula |
+| BR-013 | LONG percentage-return formula |
+| BR-014 | SHORT percentage-return formula |
+| BR-015 | Positive/negative/zero result interpretation |
+| BR-016 | Completed trades only |
+| BR-017 | Manual trade entry |
+
+The Specification does not redefine these rules.
+
+---
+
+# 8. Validation Rules
+
+## VAL-001 — Ticker Required
+
+Ticker must:
+
+- be present;
+- not be blank.
+
+If ticker is missing or blank, the trade must not be recorded.
+
+---
+
+## VAL-002 — Trade Type Required
+
+Trade type must be present and must be one of:
+
+```text
+LONG
+SHORT
+```
+
+Any other value is invalid.
+
+---
+
+## VAL-003 — Entry Date Required
+
+Entry date must be present.
+
+---
+
+## VAL-004 — Exit Date Required
+
+Exit date must be present.
+
+---
+
+## VAL-005 — Valid Date Order
+
+The required relationship is:
+
+```text
+exitDate >= entryDate
+```
+
+If:
+
+```text
+exitDate < entryDate
+```
+
+the trade must be rejected.
+
+Same-day trades are valid.
+
+---
+
+## VAL-006 — Entry Price Greater Than Zero
+
+Entry price must satisfy:
+
+```text
+entryPrice > 0
+```
+
+Zero and negative values are invalid.
+
+---
+
+## VAL-007 — Exit Price Greater Than Zero
+
+Exit price must satisfy:
+
+```text
+exitPrice > 0
+```
+
+Zero and negative values are invalid.
+
+---
+
+## VAL-008 — Number of Shares Greater Than Zero
+
+Number of shares must satisfy:
+
+```text
+numberOfShares > 0
+```
+
+Zero and negative values are invalid.
+
+---
+
+## VAL-009 — Fractional Shares Allowed
+
+Fractional share quantities must be accepted within the approved Data Model representation.
+
+Examples of valid conceptual quantities include:
+
+```text
+1
+10
+2.5
+0.75
+0.123456
+```
+
+---
+
+## VAL-010 — Ticker Normalization
+
+A valid ticker must be normalized to uppercase before persistence.
+
+Example:
+
+```text
+aapl → AAPL
+```
+
+No external ticker-existence validation is required.
+
+---
+
+# 9. API Behavior
+
+Feature 001 exposes its trade-recording behavior through the approved REST API boundary.
+
+The API must support a client request that supplies the approved trade-entry facts:
+
+- ticker;
+- trade type;
+- entry date;
+- entry price;
+- exit date;
+- exit price;
+- number of shares.
+
+A successful response must make available:
+
+- the recorded trade facts;
+- the generated trade identifier;
+- calculated dollar P&L;
+- calculated percentage return.
+
+The API must reject invalid requests according to the approved validation rules.
+
+The exact:
+
+- endpoint path;
+- HTTP method;
+- HTTP status codes;
+- JSON property names;
+- request schema;
+- response schema;
+- validation-error schema;
+- global error shape;
+- API version prefix
+
+are intentionally not frozen in this Specification unless approved during Specification review.
+
+They must be finalized before OpenAPI is frozen.
+
+---
+
+# 10. Request Parameters / Data
+
+The conceptual Feature 001 request contains:
+
+```text
+ticker
+tradeType
+entryDate
+entryPrice
+exitDate
+exitPrice
+numberOfShares
+```
+
+## Conceptual Types
+
+| Field | Conceptual Representation |
+|---|---|
+| ticker | String |
+| tradeType | LONG / SHORT |
+| entryDate | Date |
+| entryPrice | Decimal |
+| exitDate | Date |
+| exitPrice | Decimal |
+| numberOfShares | Decimal |
+
+Detailed wire-format behavior belongs to OpenAPI after contract decisions are finalized.
+
+---
+
+# 11. Success Response Behavior
+
+On successful trade creation, the system must provide enough information for the frontend to present:
+
+- the recorded trade;
+- normalized ticker;
+- trade type;
+- entry information;
+- exit information;
+- share quantity;
+- generated identifier;
+- dollar P&L;
+- percentage return.
+
+The success representation must reflect the accepted backend state.
+
+The system must not present a successful result if persistence fails.
+
+---
+
+# 12. Empty-Result Behavior
+
+Feature 001 is a create/record workflow rather than a query workflow.
+
+There is therefore no meaningful empty-result case equivalent to an empty search result.
+
+A valid trade submission either:
+
+- succeeds and creates a trade; or
+- fails and produces an error outcome.
+
+---
+
+# 13. Error Responses
+
+Feature 001 must distinguish invalid client input from unexpected technical failure at the behavioral level.
+
+## 13.1 Validation Failure
+
+When submitted input violates an approved validation rule:
+
+- the trade must not be persisted;
+- the user must receive an error outcome;
+- the application must not report success.
+
+The exact HTTP status code and payload shape remain OpenAPI decisions.
+
+## 13.2 Persistence or Technical Failure
+
+When the backend cannot complete the operation because of a technical or persistence failure:
+
+- the application must not report success;
+- incomplete state must not be presented as a successfully recorded trade;
+- internal stack traces or sensitive runtime details must not be exposed to the user.
+
+The exact external technical-error contract remains an OpenAPI decision.
+
+---
+
+# 14. Examples
+
+## Example 1 — Profitable LONG Trade
+
+Input:
+
+```text
+Ticker: AAPL
+Trade Type: LONG
+Entry Date: 2026-09-01
+Entry Price: 220
+Exit Date: 2026-09-15
+Exit Price: 230
+Number of Shares: 10
+```
+
+Normalized ticker:
+
+```text
+AAPL
+```
+
+Dollar P&L:
+
+```text
+(230 - 220) × 10 = 100
+```
+
+Percentage Return:
+
+```text
+((230 - 220) / 220) × 100
+≈ 4.5454...
+```
+
+Behavioral interpretation:
+
+```text
+Profit
+```
+
+The exact displayed percentage rounding remains downstream contract/presentation behavior.
+
+---
+
+## Example 2 — Losing LONG Trade
+
+Input:
+
+```text
+Ticker: AAPL
+Trade Type: LONG
+Entry Price: 220
+Exit Price: 210
+Number of Shares: 10
+```
+
+Dollar P&L:
+
+```text
+(210 - 220) × 10 = -100
+```
+
+Percentage Return:
+
+```text
+((210 - 220) / 220) × 100
+≈ -4.5454...
+```
+
+Behavioral interpretation:
+
+```text
+Loss
+```
+
+---
+
+## Example 3 — Profitable SHORT Trade
+
+Input:
+
+```text
+Ticker: AAPL
+Trade Type: SHORT
+Entry Price: 100
+Exit Price: 90
+Number of Shares: 10
+```
+
+Dollar P&L:
+
+```text
+(100 - 90) × 10 = 100
+```
+
+Percentage Return:
+
+```text
+((100 - 90) / 100) × 100 = 10
+```
+
+Behavioral interpretation:
+
+```text
+Profit
+```
+
+---
+
+## Example 4 — Losing SHORT Trade
+
+Input:
+
+```text
+Ticker: AAPL
+Trade Type: SHORT
+Entry Price: 100
+Exit Price: 110
+Number of Shares: 10
+```
+
+Dollar P&L:
+
+```text
+(100 - 110) × 10 = -100
+```
+
+Percentage Return:
+
+```text
+((100 - 110) / 100) × 100 = -10
+```
+
+Behavioral interpretation:
+
+```text
+Loss
+```
+
+---
+
+## Example 5 — Break-Even Trade
+
+For either LONG or SHORT:
+
+```text
+Entry Price: 100
+Exit Price: 100
+```
+
+Dollar P&L:
+
+```text
+0
+```
+
+Percentage Return:
+
+```text
+0
+```
+
+Behavioral interpretation:
+
+```text
+Break-even
+```
+
+---
+
+## Example 6 — Same-Day Trade
+
+Input:
+
+```text
+Entry Date: 2026-09-28
+Exit Date: 2026-09-28
+```
+
+Expected behavior:
+
+```text
+Valid
+```
+
+Same-day trades must not be rejected solely because entry and exit dates are equal.
+
+---
+
+## Example 7 — Invalid Date Sequence
+
+Input:
+
+```text
+Entry Date: 2026-09-28
+Exit Date: 2026-09-27
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+The trade must not be persisted.
+
+---
+
+## Example 8 — Fractional Shares
+
+Input:
+
+```text
+Number of Shares: 0.75
+```
+
+Expected behavior:
+
+```text
+Valid
+```
+
+provided all other validation rules pass.
+
+---
+
+# 15. Edge Cases
+
+## EDGE-001 — Lowercase Ticker
+
+Input:
+
+```text
+aapl
+```
+
+Expected behavior:
+
+```text
+stored/displayed trading record uses AAPL
+```
+
+---
+
+## EDGE-002 — Blank Ticker
+
+Input:
+
+```text
+""
+```
+
+or whitespace-only input.
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-003 — Zero Entry Price
+
+Input:
+
+```text
+entryPrice = 0
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-004 — Negative Entry Price
+
+Input:
+
+```text
+entryPrice < 0
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-005 — Zero Exit Price
+
+Input:
+
+```text
+exitPrice = 0
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-006 — Zero Shares
+
+Input:
+
+```text
+numberOfShares = 0
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-007 — Negative Shares
+
+Input:
+
+```text
+numberOfShares < 0
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-008 — Unsupported Trade Type
+
+Input:
+
+```text
+tradeType = OTHER
+```
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-009 — Missing Exit Information
+
+A trade without required exit information is not a completed trade.
+
+Expected behavior:
+
+```text
+Rejected
+```
+
+---
+
+## EDGE-010 — Maximum Approved Decimal Precision
+
+Values within the approved Data Model precision must be representable.
+
+Values outside approved persistence precision must not be silently altered in a way that changes business meaning.
+
+The exact rejection/rounding behavior for values exceeding allowed input scale must be finalized before OpenAPI and implementation are frozen.
+
+---
+
+# 16. Feature Invariants
+
+The following invariants must remain true for every successfully recorded Feature 001 trade:
+
+1. the trade represents a stock trade;
+2. the trade is completed;
+3. the trade type is `LONG` or `SHORT`;
+4. ticker is non-blank;
+5. persisted ticker is uppercase;
+6. entry price is greater than zero;
+7. exit price is greater than zero;
+8. number of shares is greater than zero;
+9. fractional shares are permitted;
+10. entry date is present;
+11. exit date is present;
+12. exit date is the same as or later than entry date;
+13. P&L is calculated according to the approved trade type formula;
+14. percentage return is calculated according to the approved trade type formula;
+15. performance values are derived from authoritative trade facts;
+16. calculated performance is not stored as independent authoritative database state;
+17. no external market or brokerage system is required;
+18. authentication is not required for Feature 001.
+
+---
+
+# 17. Acceptance Criteria
+
+## AC-001 — Valid LONG Trade
+
+Given a valid completed LONG stock trade,
+
+when the user submits it,
+
+then the system:
+
+- accepts the trade;
+- normalizes the ticker;
+- calculates LONG dollar P&L;
+- calculates LONG percentage return;
+- persists the trade facts;
+- returns/presents the recorded trade and calculated performance.
+
+---
+
+## AC-002 — Valid SHORT Trade
+
+Given a valid completed SHORT stock trade,
+
+when the user submits it,
+
+then the system:
+
+- accepts the trade;
+- normalizes the ticker;
+- calculates SHORT dollar P&L;
+- calculates SHORT percentage return;
+- persists the trade facts;
+- returns/presents the recorded trade and calculated performance.
+
+---
+
+## AC-003 — Fractional Shares
+
+Given a valid trade with a positive fractional share quantity,
+
+when the user submits it,
+
+then the trade is accepted if all other validation rules pass.
+
+---
+
+## AC-004 — Same-Day Trade
+
+Given:
+
+```text
+exitDate = entryDate
+```
+
+when all other input is valid,
+
+then the trade is accepted.
+
+---
+
+## AC-005 — Invalid Date Sequence
+
+Given:
+
+```text
+exitDate < entryDate
+```
+
+when the user submits the trade,
+
+then:
+
+- the trade is rejected;
+- the trade is not persisted;
+- the application does not report success.
+
+---
+
+## AC-006 — Invalid Price
+
+Given an entry price or exit price that is zero or negative,
+
+when the user submits the trade,
+
+then:
+
+- the trade is rejected;
+- the trade is not persisted.
+
+---
+
+## AC-007 — Invalid Share Quantity
+
+Given:
+
+```text
+numberOfShares <= 0
+```
+
+when the user submits the trade,
+
+then:
+
+- the trade is rejected;
+- the trade is not persisted.
+
+---
+
+## AC-008 — Missing or Blank Ticker
+
+Given a missing or blank ticker,
+
+when the user submits the trade,
+
+then:
+
+- the trade is rejected;
+- the trade is not persisted.
+
+---
+
+## AC-009 — Unsupported Trade Type
+
+Given a trade type other than `LONG` or `SHORT`,
+
+when the user submits the trade,
+
+then:
+
+- the trade is rejected;
+- the trade is not persisted.
+
+---
+
+## AC-010 — Ticker Normalization
+
+Given:
+
+```text
+ticker = aapl
+```
+
+when a valid trade is recorded,
+
+then the authoritative stored ticker is:
+
+```text
+AAPL
+```
+
+---
+
+## AC-011 — Profitable Trade Interpretation
+
+Given a trade whose approved calculation produces a positive result,
+
+then the trade performance represents a profit.
+
+---
+
+## AC-012 — Losing Trade Interpretation
+
+Given a trade whose approved calculation produces a negative result,
+
+then the trade performance represents a loss.
+
+---
+
+## AC-013 — Break-Even Interpretation
+
+Given a trade whose approved calculation produces zero,
+
+then the trade performance represents break-even.
+
+---
+
+## AC-014 — Persistence Failure
+
+Given valid trade input,
+
+when the backend cannot successfully persist the trade,
+
+then:
+
+- the operation must not be reported as successful;
+- the frontend must not present the trade as successfully recorded.
+
+---
+
+## AC-015 — No External Dependency Required
+
+Given the Feature 001 application is running,
+
+then recording a trade must not require a brokerage, market-data provider, authentication provider, or other external service.
+
+---
+
+# 18. Non-Goals
+
+Feature 001 does not attempt to solve:
+
+- complete trade-history analysis;
+- portfolio management;
+- live market monitoring;
+- automatic enrichment;
+- strategy analytics;
+- indicator analytics;
+- charting;
+- AI recommendations;
+- brokerage connectivity;
+- authentication;
+- multi-user data isolation;
+- deployment architecture.
+
+These are separate future concerns.
+
+---
+
+# 19. Open Contract Decisions
+
+The following decisions remain unresolved and must be settled before OpenAPI and implementation are frozen:
+
+1. exact REST endpoint path;
+2. exact HTTP method if not already implied by final resource design;
+3. API versioning convention;
+4. exact request JSON schema;
+5. exact success-response JSON schema;
+6. exact validation-error schema;
+7. exact technical-error schema;
+8. exact HTTP status codes;
+9. exact user-visible rounding for dollar P&L;
+10. exact user-visible rounding for percentage return;
+11. exact behavior for input values exceeding approved decimal scale.
+
+These unresolved decisions do not alter the approved Feature 001 business behavior.
+
+They must not be silently invented by implementation.
+
+---
+
+# 20. Traceability
+
+## 20.1 User Story Traceability
+
+| User Story | Requirements | Business Rules |
+|---|---|---|
+| US-001 | FR-001, FR-003–FR-020 | BR-001–BR-017 as applicable |
+| US-002 | FR-001, FR-003–FR-020 | BR-001–BR-017 as applicable |
+| US-003 | FR-004–FR-011, TEST-004, SEC-002 | BR-003–BR-010 |
+
+## 20.2 Behavioral Traceability
+
+| Specification Area | Upstream Authority |
+|---|---|
+| Completed stock trade scope | Intended System, BR-001, BR-016 |
+| Manual entry | BR-017 |
+| LONG/SHORT support | BR-002 |
+| Ticker behavior | BR-003, BR-004 |
+| Price validation | BR-005, BR-006 |
+| Share validation | BR-007 |
+| Date validation | BR-008, BR-009, BR-010 |
+| LONG P&L | BR-011 |
+| SHORT P&L | BR-012 |
+| LONG return | BR-013 |
+| SHORT return | BR-014 |
+| Profit/loss interpretation | BR-015 |
+| Persistence model | Data Model, FR-017–FR-019 |
+| Layering/API boundary | Architecture, Constitution |
+| No auth | Research, Constitution, SEC-001 |
+| No external integrations | Intended System, Research, INT-001 |
+
+---
+
+# 21. Artifact Relationships
+
+## Upstream Inputs
+
+This Specification is derived from:
+
+- `trading_journal_project_brief.md`
+- `specs/001-record-trade/supporting/intended-system.md`
+- `specs/001-record-trade/supporting/business-rules.md`
+- `specs/001-record-trade/research.md`
+- `.specify/memory/constitution.md`
+- `specs/001-record-trade/supporting/architecture.md`
+- `specs/001-record-trade/data-model.md`
+- `specs/001-record-trade/supporting/requirements.md`
+
+## Downstream Consumers
+
+This Specification must be consumed by:
+
+- `specs/001-record-trade/plan.md`
+- `specs/001-record-trade/tasks.md`
+- `specs/001-record-trade/contracts/openapi.yaml`
+- `specs/001-record-trade/supporting/test-spec.md`
+- `specs/001-record-trade/supporting/traceability-matrix.md`
+- `specs/001-record-trade/supporting/copilot-build-prompt.md`
+- implementation and review activities
+
+## Authority Boundary
+
+This Specification is authoritative for observable Feature 001 behavior.
+
+It is subject to:
+
+- Constitution;
+- approved Business Rules;
+- Supporting Requirements;
+- Intended System scope;
+- approved Data Model.
+
+It is not authoritative for:
+
+- project-wide governance;
+- exact code structure;
+- package placement;
+- implementation sequencing;
+- infrastructure beyond approved scope;
+- detailed task breakdown.
+
+## Conflict Handling
+
+If this Specification conflicts with:
+
+- Constitution;
+- Business Rules;
+- Supporting Requirements;
+- Intended System;
+- approved Data Model;
+
+the conflict must be surfaced and reconciled before Plan generation.
+
+The Specification must not silently override upstream authority.
+
+Downstream artifacts must not silently reinterpret approved Specification behavior.
+
+---
+
+# 22. Review Status
+
+**Status:** Draft — ready for serious cross-artifact review.
+
+This Specification must be reviewed against all approved upstream artifacts before `plan.md` is generated.
