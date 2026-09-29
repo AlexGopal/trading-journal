@@ -4,7 +4,7 @@
 
 Provide the setup, startup, and verification guide for Feature 001.
 
-This file is created before implementation. Exact repository commands, ports, file paths, and runtime evidence must be verified from the implemented repository before Feature 001 is considered complete.
+The commands, ports, and verification evidence below were exercised against the implemented repository on 2026-09-29.
 
 ---
 
@@ -37,7 +37,7 @@ Feature 001 uses the approved Greenfield stack:
 - JUnit + Spring Boot Test
 - Vitest + React Testing Library
 
-Exact implementation versions must be taken from repository-controlled configuration after environment setup.
+Repository-controlled versions are defined in `backend/pom.xml`, `frontend/package.json`, `frontend/package-lock.json`, and `compose.yaml`. The backend targets Java 21; the frontend requires Node `>=22 <25` and npm 11.9.0; PostgreSQL uses the pinned `postgres:17.6-alpine` image.
 
 ---
 
@@ -53,41 +53,47 @@ Before running the application:
 6. confirm JPA/Hibernate uses the Flyway-managed schema rather than serving as the authoritative schema creator;
 7. confirm the frontend API base URL/configuration from the implemented repository.
 
-Do not invent configuration names, commands, or ports before they are verified.
+Use `.env.example` as the local configuration template and keep real credentials out of source control.
 
 ---
 
 ## Startup Order
 
-Expected runtime order:
-
-```text
-PostgreSQL
-    ↓
-Flyway migration
-    ↓
-Spring Boot backend
-    ↓
-React/Vite frontend
-```
-
-Exact commands and ports are **PENDING repository verification**.
+Run PostgreSQL, then the backend (which applies Flyway migrations), then the frontend. Use separate terminals where indicated.
 
 ### Database Command
 
-**PENDING** — populate from the repository-controlled Docker configuration after successful execution.
+Create a local `.env` from `.env.example`, replace the example password, then run from the repository root:
+
+```powershell
+docker compose up -d postgres
+```
 
 ### Backend Command
 
-**PENDING** — populate from the implemented backend build configuration or repository documentation after successful execution.
+From `backend`, use the same password configured for PostgreSQL:
+
+```powershell
+$env:DB_PASSWORD = '<your-local-password>'
+mvn spring-boot:run
+```
 
 ### Frontend Command
 
-**PENDING** — populate from the implemented frontend package scripts after successful execution.
+From `frontend`:
+
+```powershell
+npm.cmd ci
+npm.cmd run dev
+```
 
 ### Runtime Ports
 
-**PENDING** — record the actual configured PostgreSQL, backend, and frontend ports after implementation setup.
+- PostgreSQL: `localhost:5432`
+- Spring Boot API: `http://localhost:8080`
+- Vite UI: `http://localhost:5173`
+
+Vite proxies `/api` requests to the backend during local development.
 
 ---
 
@@ -207,7 +213,18 @@ Verify that the Feature 001 UI:
 
 ## Automated Tests
 
-Exact commands are **PENDING repository verification**.
+Verified commands:
+
+```powershell
+cd backend
+mvn test
+
+cd ../frontend
+npm.cmd test
+npm.cmd run build
+```
+
+`mvn test` executes unit, controller, logging, and Testcontainers PostgreSQL/Flyway tests. Docker must be running so the PostgreSQL-sensitive tests execute rather than skip.
 
 The implemented repository must provide executable verification for:
 
@@ -306,9 +323,7 @@ Feature 001 intentionally does not include:
 
 ## Current Status
 
-The pre-implementation specification package is being completed.
-
-Runtime implementation has not started. Commands, ports, implementation-derived paths, and executed test evidence remain **PENDING** and must be finalized from repository evidence during implementation.
+Feature 001 implementation and its repository-controlled startup configuration are present. On 2026-09-29, backend tests passed with 16 tests and zero failures/skips against Testcontainers PostgreSQL 17.6; frontend tests passed with 7 tests; and the production frontend build passed. The local Docker/PostgreSQL, Spring Boot, and Vite stack returned successful LONG and SHORT create-trade responses through the Vite proxy, including same-day and fractional-share behavior, normalized ticker values, exact API derived-value scales, distinct IDs for duplicate submissions, and `400` for all exercised validation categories. The database count increased only for valid requests. A deliberate PostgreSQL outage returned the client-safe `500` contract, and the backend successfully created a break-even trade after PostgreSQL recovery. Desktop and narrow-width browser renders were reviewed after correcting flex-item minimum sizing. Frontend request serialization was also verified to preserve approved decimal input precision while emitting JSON numeric values.
 
 ---
 

@@ -42,7 +42,9 @@
 
 ## Implementation Evidence
 
-Implementation evidence is **Pending** for all rows until Feature 001 is implemented and reviewed.
+- Domain, validation, calculation, service, controller, logging, Flyway, and PostgreSQL evidence: `backend/src/main`, `backend/src/test`, and the verified `mvn test` run documented in `quickstart.md`.
+- Frontend API-boundary, form, state, validation, responsive composition, accessibility-oriented, and formatting evidence: `frontend/src` and the verified `npm.cmd test` / `npm.cmd run build` runs documented in `quickstart.md`.
+- Full-stack evidence: the verified local Docker/PostgreSQL, Spring Boot, and Vite run documented in `quickstart.md`, including LONG, SHORT, same-day/fractional-share, ticker-normalization, duplicate-ID, and validation behavior.
 
 ## Notes
 

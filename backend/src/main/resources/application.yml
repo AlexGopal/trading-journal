@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/trading_journal}
+    username: ${DB_USERNAME:trading_journal}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+logging:
+  level:
+    root: INFO
+    org.springframework.boot: INFO
+    org.springframework.jdbc: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+
