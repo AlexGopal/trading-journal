@@ -71,12 +71,17 @@ docker compose up -d postgres
 
 ### Backend Command
 
-From `backend`, use the same password configured for PostgreSQL:
+From `backend`:
 
 ```powershell
-$env:DB_PASSWORD = '<your-local-password>'
 mvn spring-boot:run
 ```
+
+Spring Boot imports the repository `.env` automatically when launched from `backend` or the repository root, using Spring's properties format. Keep entries unquoted, without shell `export`, backslashes, dollar signs, or inline comments. Supply values needing these characters through process environment variables instead. The same `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` configure both services. `POSTGRES_HOST` and `POSTGRES_PORT` select the backend connection; Compose publishes its internal port 5432 on `POSTGRES_PORT` (default 5433).
+
+Existing `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` overrides still take precedence; remove stale overrides from your terminal or IDE run configuration. Standard `SPRING_DATASOURCE_*` overrides also take precedence.
+
+Port 5433 avoids the separate Windows PostgreSQL service on port 5432. Changing the Compose port requires recreating the PostgreSQL container with its existing named volume. Changing `.env` credentials does not update a database already initialized in that volume. Preserve the volume and reconcile credentials before restarting; do not remove it to fix authentication.
 
 ### Frontend Command
 
@@ -89,7 +94,7 @@ npm.cmd run dev
 
 ### Runtime Ports
 
-- PostgreSQL: `localhost:5432`
+- PostgreSQL: `localhost:5433` (or `POSTGRES_PORT`)
 - Spring Boot API: `http://localhost:8080`
 - Vite UI: `http://localhost:5173`
 
